@@ -45,7 +45,7 @@ impl MetaVoteContract {
         assert!(min_locking_period < max_locking_period, "Review the min and max locking period");
         Self {
             owner_id,
-            voters: UnorderedMap::new(Keys::Voters),
+            voters: UnorderedMap::new(Keys::Voter),
             min_locking_period,
             max_locking_period,
             min_deposit_amount,
@@ -54,4 +54,33 @@ impl MetaVoteContract {
             meta_token_contract_address,
         }
     }
+
+    // ****************
+    // * View Methods *
+    // ****************
+
+    pub fn get_all_locking_positions(&self) -> Vec<LockingPositionJSON> {
+        let mut result = Vec::new();
+        let voter_id = env::predecessor_account_id();
+        let voter = self.internal_get_voter(&voter_id);
+        for index in 0..voter.locking_positions.len() {
+            let locking_position = voter.locking_positions.get(index)
+                .expect("Locking position not found!");
+            result.push(
+                locking_position.to_json(Some(index as u32))
+            );
+        }
+        result
+    }
+
+    pub fn get_locking_position(&self, index: u32) -> Option<LockingPositionJSON> {
+        let voter_id = env::predecessor_account_id();
+        let voter = self.internal_get_voter(&voter_id);
+        match voter.locking_positions.get(index as u64) {
+            Some(locking_position) => Some(locking_position.to_json(Some(index))),
+            None => None,
+        }
+    }
+
+
 }

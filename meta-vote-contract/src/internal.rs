@@ -5,7 +5,7 @@ use crate::interface::*;
 
 #[near_bindgen]
 impl MetaVoteContract {
-    /// Inner method to get the given supporter or a new default value supporter.
+    /// Inner method to get or create a Voter.
     pub(crate) fn internal_get_voter(&self, voter_id: &VoterId) -> Voter {
         self.voters.get(voter_id).unwrap_or(Voter::new(voter_id))
     }

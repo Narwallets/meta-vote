@@ -23,21 +23,21 @@ impl FungibleTokenReceiver for MetaVoteContract {
 
         let amount = amount.0;
         let voter_id = VoterId::from(sender_id);
-        if env::predecessor_account_id() == self.meta_token_contract_address {
-            // Deposit is in $META.
-            self.assert_min_deposit_amount(amount);
-            log!(
-                "DEPOSIT: {} $META deposited from {}",
-                amount,
-                &voter_id,
-            );
-            self.create_locking_position(amount, locking_period, voter_id);
-        } else {
-            panic!(
-                "This contract only works with $META from {}",
-                self.meta_token_contract_address
-            );
-        }
+        assert_eq!(
+            env::predecessor_account_id(),
+            self.meta_token_contract_address,
+            "This contract only works with $META from {}",
+            self.meta_token_contract_address
+        );
+
+        self.assert_min_deposit_amount(amount);
+        log!(
+            "DEPOSIT: {} $META deposited from {}",
+            amount,
+            &voter_id,
+        );
+        self.create_locking_position(amount, locking_period, voter_id);
+
         // Return unused amount
         PromiseOrValue::Value(U128::from(0))
     }

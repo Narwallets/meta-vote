@@ -1,7 +1,5 @@
 use crate::{*, utils::proportional};
 
-const MIN_LOCKING_PERIOD: Days = 30;
-const MAX_LOCKING_PERIOD: Days = 300;
 
 #[near_bindgen]
 #[derive(BorshDeserialize, BorshSerialize)]
@@ -9,6 +7,7 @@ pub struct LockingPosition {
     pub amount: Meta,
     pub locking_period: Days,
     pub voting_power: VotePower,
+    pub unlocking_started_at: Option<EpochMillis>,
 }
 
 impl LockingPosition {
@@ -17,6 +16,17 @@ impl LockingPosition {
             amount,
             locking_period,
             voting_power,
+            unlocking_started_at: None,
+        }
+    }
+
+    pub fn to_json(&self, index: Option<u32>) -> LockingPositionJSON {
+        LockingPositionJSON {
+            index,
+            amount: BalanceJSON::from(self.amount),
+            locking_period: self.locking_period,
+            voting_power: BalanceJSON::from(self.voting_power),
+            unlocking_started_at: self.unlocking_started_at,
         }
     }
 }
@@ -31,7 +41,7 @@ impl MetaVoteContract {
         proportional(amount, multiplier, YOCTO_UNITS)
     }
 
-    pub fn create_locking_position(
+    pub(crate) fn create_locking_position(
         &mut self,
         amount: Meta,
         locking_period: Days,
@@ -50,13 +60,16 @@ impl MetaVoteContract {
             "The max number of locking positions is {}",
             self.max_locking_positions
         );
+        
+        let voting_power = self.calculate_voting_power(amount, locking_period);
         let locking_position = LockingPosition::new(
             amount,
             locking_period,
-            self.calculate_voting_power(amount, locking_period)
+            voting_power
         );
 
         voter.locking_positions.push(&locking_position);
+        voter.voting_power += voting_power;
         self.voters.insert(&voter_id, &voter);
     }
 }
