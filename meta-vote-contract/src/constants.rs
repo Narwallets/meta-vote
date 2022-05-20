@@ -1,10 +1,13 @@
 use near_sdk::BorshIntoStorageKey;
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 
+pub const YOCTO_UNITS: u128 = 1_000_000_000_000_000_000_000_000;
+
 #[derive(BorshSerialize, BorshDeserialize)]
 pub enum Keys {
     LockingPositions,
     VotePositions,
+    Voters,
 }
 
 impl Keys {
@@ -13,6 +16,7 @@ impl Keys {
 		match self {
 			Keys::LockingPositions => format!("{}{}", "LP", id),
 			Keys::VotePositions => format!("{}{}", "VP", id),
+			Keys::Voters => format!("{}{}", "V", id),
         }
     }
 }
