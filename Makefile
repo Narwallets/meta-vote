@@ -34,7 +34,7 @@ install:
 
 test:
 	# TODO: create container for database
-	RUST_BACKTRACE=1 cargo test "${TEST_PREFIX}" -- --color always --nocapture
+	RUST_BACKTRACE=1 cargo test -- --color always --nocapture
 
 format:
 	cargo fmt -- --check

@@ -108,3 +108,70 @@ impl MetaVoteContract {
 
 
 }
+
+#[cfg(not(target_arch = "wasm32"))]
+#[cfg(test)]
+mod tests {
+    use near_contract_standards::fungible_token::receiver::FungibleTokenReceiver;
+    use near_sdk::{testing_env, MockedBlockchain, VMContext};
+    use near_sdk::json_types::{ValidAccountId, U128};
+    mod utils;
+    use utils::*;
+    use super::*;
+
+    fn basic_context() -> VMContext {
+        get_context(
+            meta_token_account(),
+            ntoy(TEST_INITIAL_BALANCE),
+            0,
+            to_ts(GENESIS_TIME_IN_DAYS),
+            false,
+        )
+    }
+
+    fn new_contract() -> MetaVoteContract {
+        MetaVoteContract::new(
+            owner_account(),
+            MIN_LOCKING_PERIOD,
+            MAX_LOCKING_PERIOD,
+            MIN_DEPOSIT_AMOUNT,
+            MAX_LOCKING_POSITIONS,
+            MAX_VOTING_POSITIONS,
+            meta_token_account(),
+        )
+    }
+
+    fn get_contract_setup(context: VMContext) -> MetaVoteContract {
+        testing_env!(context.clone());
+        let contract = new_contract();
+        contract
+    }
+
+    #[test]
+    fn test_single_deposit() {
+        let context = get_context(
+            meta_token_account(),
+            ntoy(TEST_INITIAL_BALANCE),
+            0,
+            to_ts(GENESIS_TIME_IN_DAYS),
+            false,
+        );
+        let mut contract = get_contract_setup(context);
+
+        let sender_id: ValidAccountId = voter_account().try_into().unwrap();
+        let amount: U128 = U128::from(2 * YOCTO_UNITS);
+        let msg: String = "30".to_owned();
+
+        contract.ft_on_transfer(sender_id.clone(), amount.clone(), msg.clone());
+        assert_eq!(1, contract.voters.len(), "Voter was not created!");
+
+        let voter = contract.internal_get_voter(&sender_id.to_string());
+        assert_eq!(1, voter.locking_positions.len(), "Locking position was not created!");
+
+        let vote_power = contract.calculate_voting_power(
+            Meta::from(amount),
+            msg.parse::<Days>().unwrap()
+        );
+        assert_eq!(vote_power, voter.voting_power, "Incorrect voting power calculation!");
+    }
+}

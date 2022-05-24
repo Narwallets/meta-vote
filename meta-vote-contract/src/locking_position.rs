@@ -1,6 +1,5 @@
 use crate::{*, utils::*};
 
-
 #[near_bindgen]
 #[derive(BorshDeserialize, BorshSerialize)]
 pub struct LockingPosition {
@@ -51,13 +50,50 @@ impl LockingPosition {
 
 impl MetaVoteContract {
     /// Voting power is given by f(x) = A + Bx. Where A=1, B=4 and x is the locking period proportion.
-    fn calculate_voting_power(&self, amount: Meta, locking_period: Days) -> VotePower {
+    pub(crate) fn calculate_voting_power(&self, amount: Meta, locking_period: Days) -> VotePower {
         let multiplier = YOCTO_UNITS + proportional(
             4 * YOCTO_UNITS,
             (locking_period - self.min_locking_period) as u128,
             (self.max_locking_period - self.min_locking_period) as u128
         );
         proportional(amount, multiplier, YOCTO_UNITS)
+    }
+
+    fn increase_locking_position(
+        &self,
+        voter: &mut Voter,
+        index: u64,
+        amount: Meta,
+        locking_period: Days
+    ) {
+        let voting_power = self.calculate_voting_power(amount, locking_period);
+        let mut current_position = voter.get_locking_position(index);
+        current_position.amount += amount;
+        current_position.voting_power += voting_power;
+
+        voter.locking_positions.replace(index, &current_position);
+        voter.voting_power += voting_power;
+    }
+
+    fn create_locking_position(
+        &self,
+        voter: &mut Voter,
+        amount: Meta,
+        locking_period: Days
+    ) {
+        assert!(
+            (voter.locking_positions.len() as u8) < self.max_locking_positions,
+            "The max number of locking positions is {}",
+            self.max_locking_positions
+        );
+        let voting_power = self.calculate_voting_power(amount, locking_period);
+        let locking_position = LockingPosition::new(
+            amount,
+            locking_period,
+            voting_power
+        );
+        voter.locking_positions.push(&locking_position);
+        voter.voting_power += voting_power;
     }
 
     pub(crate) fn update_locking_position(
@@ -74,30 +110,15 @@ impl MetaVoteContract {
         );
 
         let mut voter = self.internal_get_voter(&voter_id);
-        let voting_power = self.calculate_voting_power(amount, locking_period);
         match voter.find_locked_position(locking_period) {
             Some(index) => {
                 // Deposit into existing locking position.
-                let mut current_position = voter.internal_get_locking_position(index);
-                current_position.amount += amount;
-                current_position.voting_power += voting_power;
-                voter.locking_positions.replace(index, &current_position);
+                self.increase_locking_position(&mut voter, index, amount, locking_period);
             },
             None => {
-                assert!(
-                    (voter.locking_positions.len() as u8) < self.max_locking_positions,
-                    "The max number of locking positions is {}",
-                    self.max_locking_positions
-                );
-                let locking_position = LockingPosition::new(
-                    amount,
-                    locking_period,
-                    voting_power
-                );
-                voter.locking_positions.push(&locking_position);
+                self.create_locking_position(&mut voter, amount, locking_period);
             }
         };
-        voter.voting_power += voting_power;
         self.voters.insert(&voter_id, &voter);
     }
 }

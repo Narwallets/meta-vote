@@ -47,7 +47,7 @@ impl Voter {
         None
     }
 
-    pub(crate) fn internal_get_locking_position(&self, index: u64) -> LockingPosition {
+    pub(crate) fn get_locking_position(&self, index: u64) -> LockingPosition {
         self.locking_positions.get(index).expect("Index out of range!")
     }
 }
