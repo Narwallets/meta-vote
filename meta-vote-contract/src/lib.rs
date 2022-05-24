@@ -174,4 +174,123 @@ mod tests {
         );
         assert_eq!(vote_power, voter.voting_power, "Incorrect voting power calculation!");
     }
+
+    #[test]
+    fn test_multiple_deposit_same_locking_period() {
+        let context = get_context(
+            meta_token_account(),
+            ntoy(TEST_INITIAL_BALANCE),
+            0,
+            to_ts(GENESIS_TIME_IN_DAYS),
+            false,
+        );
+        let mut contract = get_contract_setup(context);
+
+        let sender_id: ValidAccountId = voter_account().try_into().unwrap();
+        let amount: U128 = U128::from(2 * YOCTO_UNITS);
+        let msg: String = "30".to_owned();
+
+        contract.ft_on_transfer(sender_id.clone(), amount.clone(), msg.clone());
+
+        let new_amount: U128 = U128::from(5 * YOCTO_UNITS);
+        contract.ft_on_transfer(sender_id.clone(), new_amount.clone(), msg.clone());
+
+        let voter = contract.internal_get_voter(&sender_id.to_string());
+        assert_eq!(1, voter.locking_positions.len(), "Locking position was not created!");
+
+        let total_vote_power = contract.calculate_voting_power(
+            Meta::from(amount.clone()),
+            msg.parse::<Days>().unwrap()
+        ) + contract.calculate_voting_power(
+            Meta::from(new_amount.clone()),
+            msg.parse::<Days>().unwrap()
+        );
+
+        // New context: the voter is doing the call now!
+        let context = get_context(
+            sender_id.to_string(),
+            ntoy(TEST_INITIAL_BALANCE),
+            0,
+            to_ts(GENESIS_TIME_IN_DAYS),
+            false,
+        );
+        testing_env!(context.clone());
+        assert_eq!(
+            VotePowerJSON::from(total_vote_power),
+            contract.get_available_voting_power(),
+            "Incorrect voting power calculation!"
+        );
+
+        let locked_balance = u128::from(amount) + u128::from(new_amount);
+        assert_eq!(
+            BalanceJSON::from(locked_balance),
+            contract.get_locked_balance(),
+            "Incorrect locked balance sum!"
+        );
+        assert_eq!(
+            BalanceJSON::from(0),
+            contract.get_balance(),
+            "Incorrect balance!"
+        );
+    }
+
+    #[test]
+    fn test_multiple_deposit_diff_locking_period() {
+        let context = get_context(
+            meta_token_account(),
+            ntoy(TEST_INITIAL_BALANCE),
+            0,
+            to_ts(GENESIS_TIME_IN_DAYS),
+            false,
+        );
+        let mut contract = get_contract_setup(context);
+
+        let sender_id: ValidAccountId = voter_account().try_into().unwrap();
+        let amount: U128 = U128::from(2 * YOCTO_UNITS);
+        let msg: String = "30".to_owned();
+
+        contract.ft_on_transfer(sender_id.clone(), amount.clone(), msg.clone());
+
+        let new_amount: U128 = U128::from(5 * YOCTO_UNITS);
+        let new_msg: String = "200".to_owned();
+        contract.ft_on_transfer(sender_id.clone(), new_amount.clone(), new_msg.clone());
+
+        let voter = contract.internal_get_voter(&sender_id.to_string());
+        assert_eq!(2, voter.locking_positions.len(), "Locking position was not created!");
+
+        let total_vote_power = contract.calculate_voting_power(
+            Meta::from(amount),
+            msg.parse::<Days>().unwrap()
+        ) + contract.calculate_voting_power(
+            Meta::from(new_amount),
+            new_msg.parse::<Days>().unwrap()
+        );
+
+        // New context: the voter is doing the call now!
+        let context = get_context(
+            sender_id.to_string(),
+            ntoy(TEST_INITIAL_BALANCE),
+            0,
+            to_ts(GENESIS_TIME_IN_DAYS),
+            false,
+        );
+        testing_env!(context.clone());
+        assert_eq!(
+            VotePowerJSON::from(total_vote_power),
+            contract.get_available_voting_power(),
+            "Incorrect voting power calculation!"
+        );
+
+        let locked_balance = u128::from(amount) + u128::from(new_amount);
+        assert_eq!(
+            BalanceJSON::from(locked_balance),
+            contract.get_locked_balance(),
+            "Incorrect locked balance sum!"
+        );
+        assert_eq!(
+            BalanceJSON::from(0),
+            contract.get_balance(),
+            "Incorrect balance!"
+        );
+    }
 }
