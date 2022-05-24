@@ -45,7 +45,7 @@ impl LockingPosition {
         }
     }
 
-    pub fn to_json(&self, index: Option<u32>) -> LockingPositionJSON {
+    pub fn to_json(&self, index: Option<PositionIndex>) -> LockingPositionJSON {
         LockingPositionJSON {
             index,
             amount: BalanceJSON::from(self.amount),
@@ -56,6 +56,7 @@ impl LockingPosition {
     }
 }
 
+#[near_bindgen]
 impl MetaVoteContract {
     /// Voting power is given by f(x) = A + Bx. Where A=1, B=4 and x is the locking period proportion.
     pub(crate) fn calculate_voting_power(&self, amount: Meta, locking_period: Days) -> VotePower {
@@ -104,7 +105,7 @@ impl MetaVoteContract {
         voter.voting_power += voting_power;
     }
 
-    pub(crate) fn update_locking_position(
+    pub(crate) fn deposit_locking_position(
         &mut self,
         amount: Meta,
         locking_period: Days,
@@ -128,5 +129,26 @@ impl MetaVoteContract {
             }
         };
         self.voters.insert(&voter_id, &voter);
+    }
+
+    pub(crate) fn create_unlocking_position(
+        &mut self,
+        voter: &mut Voter,
+        amount: Meta,
+        locking_period: Days,
+        voting_power: VotePower
+    ) {
+        assert!(
+            (voter.locking_positions.len() as u8) < self.max_locking_positions,
+            "The max number of locking positions is {}",
+            self.max_locking_positions
+        );
+        let mut unlocking_position = LockingPosition::new(
+            amount,
+            locking_period,
+            voting_power
+        );
+        unlocking_position.unlocking_started_at = Some(get_current_epoch_millis());
+        voter.locking_positions.push(&unlocking_position);
     }
 }

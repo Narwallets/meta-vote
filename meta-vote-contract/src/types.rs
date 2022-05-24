@@ -9,6 +9,7 @@ pub type Days = u16;
 pub type Meta = Balance;
 pub type ContractAddress = AccountId;
 pub type EpochMillis = u64;
+pub type PositionIndex = u64;
 
 pub type BalanceJSON = U128;
 pub type MetaJSON = U128;
@@ -23,7 +24,7 @@ construct_uint! {
 #[derive(Serialize, Deserialize)]
 #[serde(crate = "near_sdk::serde")]
 pub struct LockingPositionJSON {
-    pub index: Option<u32>,
+    pub index: Option<PositionIndex>,
     pub amount: MetaJSON,
     pub locking_period: Days,
     pub voting_power: VotePowerJSON,
