@@ -82,5 +82,29 @@ impl MetaVoteContract {
         }
     }
 
+    pub fn get_balance(&self) -> BalanceJSON {
+        let voter_id = env::predecessor_account_id();
+        let voter = self.internal_get_voter(&voter_id);
+        BalanceJSON::from(voter.balance)
+    }
+
+    pub fn get_locked_balance(&self) -> BalanceJSON {
+        let voter_id = env::predecessor_account_id();
+        let voter = self.internal_get_voter(&voter_id);
+        BalanceJSON::from(voter.sum_locked())
+    }
+
+    pub fn get_available_voting_power(&self) -> VotePowerJSON {
+        let voter_id = env::predecessor_account_id();
+        let voter = self.internal_get_voter(&voter_id);
+        VotePowerJSON::from(voter.voting_power)
+    }
+
+    pub fn get_used_voting_power(&self) -> VotePowerJSON {
+        let voter_id = env::predecessor_account_id();
+        let voter = self.internal_get_voter(&voter_id);
+        VotePowerJSON::from(voter.sum_used_votes())
+    }
+
 
 }
