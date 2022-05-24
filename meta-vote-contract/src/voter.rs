@@ -22,7 +22,29 @@ impl Voter {
     pub(crate) fn sum_locked(&self) -> Meta {
         let mut result = 0_u128;
         for locking_position in self.locking_positions.iter() {
-            result += locking_position.amount;
+            if locking_position.is_locked() {
+                result += locking_position.amount;
+            }
+        }
+        result
+    }
+
+    pub(crate) fn sum_unlocking(&self) -> Meta {
+        let mut result = 0_u128;
+        for locking_position in self.locking_positions.iter() {
+            if locking_position.is_unlocking() {
+                result += locking_position.amount;
+            }
+        }
+        result
+    }
+
+    pub(crate) fn sum_unlocked(&self) -> Meta {
+        let mut result = 0_u128;
+        for locking_position in self.locking_positions.iter() {
+            if locking_position.is_unlocked() {
+                result += locking_position.amount;
+            }
         }
         result
     }

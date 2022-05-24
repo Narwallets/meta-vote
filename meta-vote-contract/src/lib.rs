@@ -12,6 +12,7 @@ mod utils;
 mod vote_position;
 mod voter;
 use types::*;
+use utils::get_current_epoch_millis;
 use voter::Voter;
 
 use crate::{constants::*, vote_position::*, locking_position::*, voter::*};
@@ -55,6 +56,25 @@ impl MetaVoteContract {
         }
     }
 
+    // *************
+    // * Unlocking *
+    // *************
+
+    pub fn unlock_position(&mut self, index: u32) {
+        let voter_id = env::predecessor_account_id();
+        let mut voter = self.internal_get_voter(&voter_id);
+        let mut locking_position = voter.locking_positions.get(index as u64)
+            .expect("Locking position not found!");
+
+        let voting_power = locking_position.voting_power;
+        assert!(voter.voting_power >= voting_power, "Not enough free voting power to unlock!");
+
+        locking_position.unlocking_started_at = Some(get_current_epoch_millis());
+        voter.locking_positions.replace(index as u64, &locking_position);
+        voter.voting_power -= voting_power;
+        self.voters.insert(&voter_id, &voter);
+    }
+
     // ****************
     // * View Methods *
     // ****************
@@ -85,13 +105,20 @@ impl MetaVoteContract {
     pub fn get_balance(&self) -> BalanceJSON {
         let voter_id = env::predecessor_account_id();
         let voter = self.internal_get_voter(&voter_id);
-        BalanceJSON::from(voter.balance)
+        let balance = voter.balance + voter.sum_unlocked();
+        BalanceJSON::from(balance)
     }
 
     pub fn get_locked_balance(&self) -> BalanceJSON {
         let voter_id = env::predecessor_account_id();
         let voter = self.internal_get_voter(&voter_id);
         BalanceJSON::from(voter.sum_locked())
+    }
+
+    pub fn get_unlocking_balance(&self) -> BalanceJSON {
+        let voter_id = env::predecessor_account_id();
+        let voter = self.internal_get_voter(&voter_id);
+        BalanceJSON::from(voter.sum_unlocking())
     }
 
     pub fn get_available_voting_power(&self) -> VotePowerJSON {

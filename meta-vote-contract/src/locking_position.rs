@@ -10,6 +10,10 @@ pub struct LockingPosition {
 }
 
 impl LockingPosition {
+    fn locking_period_millis(&self) -> u64 {
+        self.locking_period as u64 * 24 * 60 * 60 * 1_000
+    }
+
     pub fn new(amount: Meta, locking_period: Days, voting_power: VotePower) -> Self {
         LockingPosition {
             amount,
@@ -25,14 +29,18 @@ impl LockingPosition {
 
     pub fn is_unlocking(&self) -> bool {
         match self.unlocking_started_at {
-            Some(date) => get_current_epoch_millis() <= date,
+            Some(date) => {
+                get_current_epoch_millis() <= (date + self.locking_period_millis())
+            },
             None => false,
         }
     }
 
     pub fn is_unlocked(&self) -> bool {
         match self.unlocking_started_at {
-            Some(date) => get_current_epoch_millis() > date,
+            Some(date) => {
+                get_current_epoch_millis() > (date + self.locking_period_millis())
+            },
             None => false,
         }
     }
