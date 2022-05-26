@@ -109,7 +109,8 @@ impl MetaVoteContract {
         &mut self,
         amount: Meta,
         locking_period: Days,
-        voter_id: VoterId
+        voter_id: VoterId,
+        voter: &mut Voter
     ) {
         assert!(
             locking_period <= self.max_locking_period
@@ -118,7 +119,6 @@ impl MetaVoteContract {
             self.min_locking_period, self.max_locking_period 
         );
 
-        let mut voter = self.internal_get_voter(&voter_id);
         match voter.find_locked_position(locking_period) {
             Some(index) => {
                 // Deposit into existing locking position.
@@ -150,16 +150,5 @@ impl MetaVoteContract {
         );
         unlocking_position.unlocking_started_at = Some(get_current_epoch_millis());
         voter.locking_positions.push(&unlocking_position);
-    }
-
-    pub(crate) fn new_relock(
-        &mut self,
-        voter: &mut Voter,
-        locking_position: &LockingPosition,
-        index: PositionIndex,
-        amount: Meta,
-        locking_period: Days
-    ) {
-
     }
 }

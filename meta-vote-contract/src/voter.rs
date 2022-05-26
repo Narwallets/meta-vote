@@ -69,7 +69,11 @@ impl Voter {
         None
     }
 
-    pub(crate) fn get_locking_position(&self, index: u64) -> LockingPosition {
+    pub(crate) fn get_locking_position(&self, index: PositionIndex) -> LockingPosition {
         self.locking_positions.get(index).expect("Index out of range!")
+    }
+
+    pub(crate) fn remove_position(&mut self, index: PositionIndex) {
+        self.locking_positions.swap_remove(index);
     }
 }

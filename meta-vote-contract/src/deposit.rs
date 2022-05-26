@@ -36,7 +36,8 @@ impl FungibleTokenReceiver for MetaVoteContract {
             amount,
             &voter_id,
         );
-        self.deposit_locking_position(amount, locking_period, voter_id);
+        let mut voter = self.internal_get_voter(&voter_id);
+        self.deposit_locking_position(amount, locking_period, voter_id, &mut voter);
 
         // Return unused amount
         PromiseOrValue::Value(U128::from(0))
