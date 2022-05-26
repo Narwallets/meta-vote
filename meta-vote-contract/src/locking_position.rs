@@ -10,8 +10,8 @@ pub struct LockingPosition {
 }
 
 impl LockingPosition {
-    fn locking_period_millis(&self) -> u64 {
-        self.locking_period as u64 * 24 * 60 * 60 * 1_000
+    pub fn locking_period_millis(&self) -> u64 {
+        days_to_millis(self.locking_period)
     }
 
     pub fn new(amount: Meta, locking_period: Days, voting_power: VotePower) -> Self {
@@ -150,5 +150,16 @@ impl MetaVoteContract {
         );
         unlocking_position.unlocking_started_at = Some(get_current_epoch_millis());
         voter.locking_positions.push(&unlocking_position);
+    }
+
+    pub(crate) fn new_relock(
+        &mut self,
+        voter: &mut Voter,
+        locking_position: &LockingPosition,
+        index: PositionIndex,
+        amount: Meta,
+        locking_period: Days
+    ) {
+
     }
 }
