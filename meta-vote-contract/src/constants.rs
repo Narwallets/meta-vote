@@ -1,8 +1,6 @@
 use near_sdk::BorshStorageKey;
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 
-use crate::*;
-
 pub const YOCTO_UNITS: u128 = 1_000_000_000_000_000_000_000_000;
 
 #[derive(BorshSerialize, BorshDeserialize, BorshStorageKey)]

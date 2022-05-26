@@ -13,9 +13,13 @@ impl Voter {
     pub(crate) fn new(id: &VoterId) -> Self {
         Self {
             balance: 0,
-            locking_positions: Vector::new(Keys::LockingPosition.as_prefix(&id).as_bytes()),
+            locking_positions: Vector::new(
+                Keys::LockingPosition.as_prefix(id.as_str()).as_bytes()
+            ),
             voting_power: 0,
-            vote_positions: Vector::new(Keys::VotePosition.as_prefix(&id).as_bytes()),
+            vote_positions: Vector::new(
+                Keys::VotePosition.as_prefix(id.as_str()).as_bytes()
+            ),
         }
     }
 

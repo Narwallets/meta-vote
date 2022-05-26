@@ -122,10 +122,10 @@ impl MetaVoteContract {
         match voter.find_locked_position(locking_period) {
             Some(index) => {
                 // Deposit into existing locking position.
-                self.increase_locking_position(&mut voter, index, amount, locking_period);
+                self.increase_locking_position(voter, index, amount, locking_period);
             },
             None => {
-                self.create_locking_position(&mut voter, amount, locking_period);
+                self.create_locking_position(voter, amount, locking_period);
             }
         };
         self.voters.insert(&voter_id, &voter);

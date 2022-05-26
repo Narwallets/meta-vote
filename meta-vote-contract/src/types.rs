@@ -1,7 +1,7 @@
 use uint::construct_uint;
 use near_sdk::{AccountId, Balance};
 use near_sdk::serde::{Deserialize, Serialize};
-use near_sdk::json_types::{ValidAccountId, U128};
+use near_sdk::json_types::U128;
 
 pub type VoterId = AccountId;
 pub type VotePower = u128;
@@ -14,7 +14,6 @@ pub type PositionIndex = u64;
 pub type BalanceJSON = U128;
 pub type MetaJSON = U128;
 pub type VotePowerJSON = U128;
-pub type VoterIdJSON = ValidAccountId;
 
 construct_uint! {
     /// 256-bit unsigned integer.

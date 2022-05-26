@@ -2,8 +2,7 @@
 #![allow(unused_variables)]
 #![allow(dead_code)]
 
-use near_sdk::json_types::Base58PublicKey;
-use near_sdk::{AccountId, MockedBlockchain, PromiseResult, VMContext, Balance};
+use near_sdk::{AccountId, MockedBlockchain, PromiseResult, VMContext, Balance, PublicKey, Gas};
 
 use crate::constants::YOCTO_UNITS;
 use crate::types::*;
@@ -20,39 +19,39 @@ pub const MAX_LOCKING_POSITIONS: u8 = 20;
 pub const MAX_VOTING_POSITIONS: u8 = 100;
 
 pub fn system_account() -> AccountId {
-    "system".to_string()
+    AccountId::new_unchecked("system".to_string())
 }
 
 pub fn contract_account() -> AccountId {
-    "contract".to_string()
+    AccountId::new_unchecked("contract".to_string())
 }
 
 pub fn treasury_account() -> AccountId {
-    "treasury".to_string()
+    AccountId::new_unchecked("treasury".to_string())
 }
 
 pub fn owner_account() -> AccountId {
-    "owner".to_string()
+    AccountId::new_unchecked("owner".to_string())
 }
 
 pub fn non_owner() -> AccountId {
-    "non_owner".to_string()
+    AccountId::new_unchecked("non_owner".to_string())
 }
 
 pub fn developer_account() -> AccountId {
-    "developer".to_string()
+    AccountId::new_unchecked("developer".to_string())
 }
 
 pub fn operator_account() -> AccountId {
-    "operator".to_string()
+    AccountId::new_unchecked("operator".to_string())
 }
 
 pub fn meta_token_account() -> AccountId {
-    "meta-token".to_string()
+    AccountId::new_unchecked("meta-token".to_string())
 }
 
 pub fn voter_account() -> AccountId {
-    "voter".to_string()
+    AccountId::new_unchecked("voter".to_string())
 }
 
 
@@ -95,12 +94,15 @@ pub fn get_context(
     account_balance: u128,
     account_locked_balance: u128,
     block_timestamp: u64,
-    is_view: bool,
 ) -> VMContext {
+    let ed: PublicKey = "ed25519:6E8sCci9badyRkXb3JoRpBj5p8C6Tw41ELDZoiihKEtp"
+        .parse()
+        .unwrap();
+    let seed: [u8; 32] = [0; 32];
     VMContext {
         current_account_id: contract_account(),
         signer_account_id: predecessor_account_id.clone(),
-        signer_account_pk: vec![0, 1, 2],
+        signer_account_pk: ed,
         predecessor_account_id,
         input: vec![],
         block_index: 1,
@@ -110,33 +112,9 @@ pub fn get_context(
         account_locked_balance,
         storage_usage: 10u64.pow(6),
         attached_deposit: 0,
-        prepaid_gas: 10u64.pow(15),
-        random_seed: vec![0, 1, 2],
-        is_view,
-        output_data_receivers: vec![],
+        prepaid_gas: Gas(10u64.pow(15)),
+        random_seed: seed,
+        view_config: None,
+        output_data_receivers: Vec::new()
     }
-}
-
-pub fn testing_env_with_promise_results(context: VMContext, promise_result: PromiseResult) {
-    let storage = near_sdk::env::take_blockchain_interface()
-        .unwrap()
-        .as_mut_mocked_blockchain()
-        .unwrap()
-        .take_storage();
-
-    near_sdk::env::set_blockchain_interface(Box::new(MockedBlockchain::new(
-        context,
-        Default::default(),
-        Default::default(),
-        vec![promise_result],
-        storage,
-        Default::default(),
-        Default::default(),
-    )));
-}
-
-pub fn public_key(byte_val: u8) -> Base58PublicKey {
-    let mut pk = vec![byte_val; 33];
-    pk[0] = 0;
-    Base58PublicKey(pk)
 }

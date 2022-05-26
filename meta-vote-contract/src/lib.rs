@@ -1,6 +1,6 @@
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
-use near_sdk::collections::{UnorderedMap, UnorderedSet, Vector};
-use near_sdk::{env, near_bindgen, AccountId, Balance, PanicOnDefault, PromiseResult};
+use near_sdk::collections::{UnorderedMap, Vector};
+use near_sdk::{env, near_bindgen, AccountId, Balance, PanicOnDefault};
 
 mod constants;
 mod deposit;
@@ -16,7 +16,7 @@ use utils::get_current_epoch_millis;
 use voter::Voter;
 
 use crate::utils::{days_to_millis, millis_to_days};
-use crate::{constants::*, vote_position::*, locking_position::*, voter::*};
+use crate::{constants::*, vote_position::*, locking_position::*};
 
 #[near_bindgen]
 #[derive(BorshDeserialize, BorshSerialize, PanicOnDefault)]
@@ -89,7 +89,7 @@ impl MetaVoteContract {
             "Amount too large! If you want to remove all amount use the fn unlock_position"
         );
         assert!(
-            (locking_position.amount - amount) > self.min_deposit_amount,
+            (locking_position.amount - amount) >= self.min_deposit_amount,
             "A locking position cannot have less than {} $META",
             self.min_deposit_amount
         );
@@ -174,51 +174,51 @@ impl MetaVoteContract {
         let mut locking_position = voter.locking_positions.get(index)
             .expect("Locking position not found!");
 
-        // Check voter balance and unlocking position amount.
-        let amount_from_position = amount_from_position.0;
-        let amount_from_balance = amount_from_balance.0;
-        assert!(
-            voter.balance >= amount_from_balance,
-            "Not enough balance."
-        );
-        assert!(
-            voter.balance >= amount_from_balance,
-            "Not enough balance."
-        );
+        // // Check voter balance and unlocking position amount.
+        // let amount_from_position = amount_from_position.0;
+        // let amount_from_balance = amount_from_balance.0;
+        // assert!(
+        //     voter.balance >= amount_from_balance,
+        //     "Not enough balance."
+        // );
+        // assert!(
+        //     voter.balance >= amount_from_balance,
+        //     "Not enough balance."
+        // );
 
 
-        assert!(locking_position.unlocking_started_at.is_some(), "Cannot re-lock a locked position.");
-        let now = get_current_epoch_millis();
-        let unlocking_date = locking_position.unlocking_started_at.unwrap()
-            + locking_position.locking_period_millis();
+        // assert!(locking_position.unlocking_started_at.is_some(), "Cannot re-lock a locked position.");
+        // let now = get_current_epoch_millis();
+        // let unlocking_date = locking_position.unlocking_started_at.unwrap()
+        //     + locking_position.locking_period_millis();
 
-        let amount = amount.0;
-        if unlocking_date < now {
-            self.new_relock(&mut voter, &locking_position, index, amount, locking_period);
-        } else {
-            let remaining_period = unlocking_date - now;
-            let min_locking_period_millis = days_to_millis(self.min_locking_period);
-            assert!(
-                remaining_period > min_locking_period_millis,
-                "The remaining period to unlock is less than the min locking period {} days",
-                self.min_locking_period
-            );
-        }
-
-        //// -----> RELOCKING IS CONSTRAINED BY THE AMOUNT, IT SHOULD BE GREATER THAN THE REMAINING.
-
-        // if (unlocking_date - now) > days_to_millis(self.min_locking_period) {
-        //     locking_period
+        // let amount = amount.0;
+        // if unlocking_date < now {
+        //     self.new_relock(&mut voter, &locking_position, index, amount, locking_period);
+        // } else {
+        //     let remaining_period = unlocking_date - now;
+        //     let min_locking_period_millis = days_to_millis(self.min_locking_period);
+        //     assert!(
+        //         remaining_period > min_locking_period_millis,
+        //         "The remaining period to unlock is less than the min locking period {} days",
+        //         self.min_locking_period
+        //     );
         // }
-        // if let Some(date) = locking_position.unlocking_started_at {
-        //     if unlocking_date < now {
-        //     }
-        // }
-        // // if locking_position.is_unlocking() {
-        // //     let
-        // //     assert!(locking_position)
+
+        // //// -----> RELOCKING IS CONSTRAINED BY THE AMOUNT, IT SHOULD BE GREATER THAN THE REMAINING.
+
+        // // if (unlocking_date - now) > days_to_millis(self.min_locking_period) {
+        // //     locking_period
         // // }
-        // // assert!(locking_position.is_unlocking(), "Relock only an unlocking position");
+        // // if let Some(date) = locking_position.unlocking_started_at {
+        // //     if unlocking_date < now {
+        // //     }
+        // // }
+        // // // if locking_position.is_unlocking() {
+        // // //     let
+        // // //     assert!(locking_position)
+        // // // }
+        // // // assert!(locking_position.is_unlocking(), "Relock only an unlocking position");
     }
 
     pub fn relock_from_balance(
@@ -228,39 +228,37 @@ impl MetaVoteContract {
     ) {
         let voter_id = env::predecessor_account_id();
         let mut voter = self.internal_get_voter(&voter_id);
-        let mut locking_position = voter.locking_positions.get(index)
-            .expect("Locking position not found!");
 
-        // Check voter balance and unlocking position amount.
-        let amount_from_position = amount_from_position.0;
-        let amount_from_balance = amount_from_balance.0;
-        assert!(
-            voter.balance >= amount_from_balance,
-            "Not enough balance."
-        );
-        assert!(
-            voter.balance >= amount_from_balance,
-            "Not enough balance."
-        );
+        // // Check voter balance and unlocking position amount.
+        // let amount_from_position = amount_from_position.0;
+        // let amount_from_balance = amount_from_balance.0;
+        // assert!(
+        //     voter.balance >= amount_from_balance,
+        //     "Not enough balance."
+        // );
+        // assert!(
+        //     voter.balance >= amount_from_balance,
+        //     "Not enough balance."
+        // );
 
 
-        assert!(locking_position.unlocking_started_at.is_some(), "Cannot re-lock a locked position.");
-        let now = get_current_epoch_millis();
-        let unlocking_date = locking_position.unlocking_started_at.unwrap()
-            + locking_position.locking_period_millis();
+        // assert!(locking_position.unlocking_started_at.is_some(), "Cannot re-lock a locked position.");
+        // let now = get_current_epoch_millis();
+        // let unlocking_date = locking_position.unlocking_started_at.unwrap()
+        //     + locking_position.locking_period_millis();
 
-        let amount = amount.0;
-        if unlocking_date < now {
-            self.new_relock(&mut voter, &locking_position, index, amount, locking_period);
-        } else {
-            let remaining_period = unlocking_date - now;
-            let min_locking_period_millis = days_to_millis(self.min_locking_period);
-            assert!(
-                remaining_period > min_locking_period_millis,
-                "The remaining period to unlock is less than the min locking period {} days",
-                self.min_locking_period
-            );
-        }
+        // let amount = amount.0;
+        // if unlocking_date < now {
+        //     self.new_relock(&mut voter, &locking_position, index, amount, locking_period);
+        // } else {
+        //     let remaining_period = unlocking_date - now;
+        //     let min_locking_period_millis = days_to_millis(self.min_locking_period);
+        //     assert!(
+        //         remaining_period > min_locking_period_millis,
+        //         "The remaining period to unlock is less than the min locking period {} days",
+        //         self.min_locking_period
+        //     );
+        // }
 
         //// -----> RELOCKING IS CONSTRAINED BY THE AMOUNT, IT SHOULD BE GREATER THAN THE REMAINING.
 
@@ -341,8 +339,8 @@ impl MetaVoteContract {
 #[cfg(test)]
 mod tests {
     use near_contract_standards::fungible_token::receiver::FungibleTokenReceiver;
-    use near_sdk::{testing_env, MockedBlockchain, VMContext};
-    use near_sdk::json_types::{ValidAccountId, U128};
+    use near_sdk::{testing_env, VMContext};
+    use near_sdk::json_types::U128;
     mod utils;
     use utils::*;
     use super::*;
@@ -353,7 +351,6 @@ mod tests {
             ntoy(TEST_INITIAL_BALANCE),
             0,
             to_ts(GENESIS_TIME_IN_DAYS),
-            false,
         )
     }
 
@@ -382,18 +379,17 @@ mod tests {
             ntoy(TEST_INITIAL_BALANCE),
             0,
             to_ts(GENESIS_TIME_IN_DAYS),
-            false,
         );
         let mut contract = get_contract_setup(context);
 
-        let sender_id: ValidAccountId = voter_account().try_into().unwrap();
+        let sender_id: AccountId = voter_account();
         let amount = U128::from(2 * YOCTO_UNITS);
         let msg: String = "30".to_owned();
 
         contract.ft_on_transfer(sender_id.clone(), amount.clone(), msg.clone());
         assert_eq!(1, contract.voters.len(), "Voter was not created!");
 
-        let voter = contract.internal_get_voter(&sender_id.to_string());
+        let voter = contract.internal_get_voter(&sender_id);
         assert_eq!(1, voter.locking_positions.len(), "Locking position was not created!");
 
         let vote_power = contract.calculate_voting_power(
@@ -410,11 +406,10 @@ mod tests {
             ntoy(TEST_INITIAL_BALANCE),
             0,
             to_ts(GENESIS_TIME_IN_DAYS),
-            false,
         );
         let mut contract = get_contract_setup(context);
 
-        let sender_id: ValidAccountId = voter_account().try_into().unwrap();
+        let sender_id: AccountId = voter_account();
         let amount = U128::from(2 * YOCTO_UNITS);
         let msg: String = "30".to_owned();
 
@@ -423,7 +418,7 @@ mod tests {
         let new_amount = U128::from(5 * YOCTO_UNITS);
         contract.ft_on_transfer(sender_id.clone(), new_amount.clone(), msg.clone());
 
-        let voter = contract.internal_get_voter(&sender_id.to_string());
+        let voter = contract.internal_get_voter(&sender_id);
         assert_eq!(1, voter.locking_positions.len(), "Locking position was not created!");
 
         let total_vote_power = contract.calculate_voting_power(
@@ -436,11 +431,10 @@ mod tests {
 
         // New context: the voter is doing the call now!
         let context = get_context(
-            sender_id.to_string(),
+            sender_id,
             ntoy(TEST_INITIAL_BALANCE),
             0,
             to_ts(GENESIS_TIME_IN_DAYS),
-            false,
         );
         testing_env!(context.clone());
         assert_eq!(
@@ -469,11 +463,10 @@ mod tests {
             ntoy(TEST_INITIAL_BALANCE),
             0,
             to_ts(GENESIS_TIME_IN_DAYS),
-            false,
         );
         let mut contract = get_contract_setup(context);
 
-        let sender_id: ValidAccountId = voter_account().try_into().unwrap();
+        let sender_id: AccountId = voter_account();
         let amount = U128::from(2 * YOCTO_UNITS);
         let msg: String = "30".to_owned();
 
@@ -483,7 +476,7 @@ mod tests {
         let new_msg: String = "200".to_owned();
         contract.ft_on_transfer(sender_id.clone(), new_amount.clone(), new_msg.clone());
 
-        let voter = contract.internal_get_voter(&sender_id.to_string());
+        let voter = contract.internal_get_voter(&sender_id);
         assert_eq!(2, voter.locking_positions.len(), "Locking position was not created!");
 
         let total_vote_power = contract.calculate_voting_power(
@@ -496,11 +489,10 @@ mod tests {
 
         // New context: the voter is doing the call now!
         let context = get_context(
-            sender_id.to_string(),
+            sender_id,
             ntoy(TEST_INITIAL_BALANCE),
             0,
             to_ts(GENESIS_TIME_IN_DAYS),
-            false,
         );
         testing_env!(context.clone());
         assert_eq!(
@@ -529,11 +521,10 @@ mod tests {
             ntoy(TEST_INITIAL_BALANCE),
             0,
             to_ts(GENESIS_TIME_IN_DAYS),
-            false,
         );
         let mut contract = get_contract_setup(context);
 
-        let sender_id: ValidAccountId = voter_account().try_into().unwrap();
+        let sender_id: AccountId = voter_account();
         let amount = U128::from(2 * YOCTO_UNITS);
         let msg: String = "30".to_owned();
 
@@ -541,18 +532,17 @@ mod tests {
 
         // New context: the voter is doing the call now!
         let context = get_context(
-            sender_id.to_string(),
+            sender_id.clone(),
             ntoy(TEST_INITIAL_BALANCE),
             0,
             to_ts(GENESIS_TIME_IN_DAYS),
-            false,
         );
         testing_env!(context.clone());
 
         assert_eq!(amount, contract.get_locked_balance(), "Incorrect locked balance!");
         assert_eq!(BalanceJSON::from(0), contract.get_unlocking_balance(), "Incorrect unlocking balance!");
 
-        let voter = contract.internal_get_voter(&sender_id.to_string());
+        let voter = contract.internal_get_voter(&sender_id);
         let index = contract.get_all_locking_positions()
             .first()
             .unwrap()
@@ -569,7 +559,7 @@ mod tests {
         assert_eq!(BalanceJSON::from(0), contract.get_locked_balance(), "Incorrect locked balance!");
         assert_eq!(amount, contract.get_unlocking_balance(), "Incorrect unlocking balance!");
 
-        let voter = contract.internal_get_voter(&sender_id.to_string());
+        let voter = contract.internal_get_voter(&sender_id);
         assert_eq!(voter.voting_power, 0, "Voting power was not removed!");
     }
 
@@ -580,11 +570,10 @@ mod tests {
             ntoy(TEST_INITIAL_BALANCE),
             0,
             to_ts(GENESIS_TIME_IN_DAYS),
-            false,
         );
         let mut contract = get_contract_setup(context);
 
-        let sender_id: ValidAccountId = voter_account().try_into().unwrap();
+        let sender_id: AccountId = voter_account();
         let amount = U128::from(2 * YOCTO_UNITS);
         let msg: String = "30".to_owned();
         contract.ft_on_transfer(sender_id.clone(), amount.clone(), msg.clone());
@@ -595,11 +584,10 @@ mod tests {
 
         // New context: the voter is doing the call now!
         let context = get_context(
-            sender_id.to_string(),
+            sender_id.clone(),
             ntoy(TEST_INITIAL_BALANCE),
             0,
             to_ts(GENESIS_TIME_IN_DAYS),
-            false,
         );
         testing_env!(context.clone());
 
@@ -615,7 +603,7 @@ mod tests {
             .unwrap();
         let third_amount = U128::from(4 * YOCTO_UNITS);
         contract.unlock_partial_position(index, third_amount);
-        let voter = contract.internal_get_voter(&sender_id.to_string());
+        let voter = contract.internal_get_voter(&sender_id);
         assert_eq!(3, voter.locking_positions.len(), "Locking position was not created!");
 
         let unlocking_started_at = contract.get_all_locking_positions()
@@ -629,7 +617,7 @@ mod tests {
         assert_eq!(locked_amount, contract.get_locked_balance(), "Incorrect locked balance!");
         assert_eq!(third_amount, contract.get_unlocking_balance(), "Incorrect unlocking balance!");
 
-        let voter = contract.internal_get_voter(&sender_id.to_string());
+        let voter = contract.internal_get_voter(&sender_id);
         let total_vote_power = contract.calculate_voting_power(
             Meta::from(amount),
             msg.parse::<Days>().unwrap()
