@@ -154,6 +154,7 @@ impl MetaVoteContract {
         }
         let amount = locking_position.amount + amount_from_balance;
         voter.remove_position(index);
+        voter.balance -= amount_from_balance;
         self.deposit_locking_position(
             amount,
             locking_period,
@@ -174,51 +175,61 @@ impl MetaVoteContract {
         let mut locking_position = voter.locking_positions.get(index)
             .expect("Locking position not found!");
 
-        // // Check voter balance and unlocking position amount.
-        // let amount_from_position = amount_from_position.0;
-        // let amount_from_balance = amount_from_balance.0;
-        // assert!(
-        //     voter.balance >= amount_from_balance,
-        //     "Not enough balance."
-        // );
-        // assert!(
-        //     voter.balance >= amount_from_balance,
-        //     "Not enough balance."
-        // );
+        // Check voter balance and unlocking position amount.
+        let amount_from_balance = amount_from_balance.0;
+        let amount_from_position = amount_from_position.0;
+        assert!(
+            voter.balance >= amount_from_balance,
+            "Not enough balance."
+        );
+        assert!(
+            locking_position.amount >= amount_from_position,
+            "Locking position amount is not enough."
+        );
+        let amount = amount_from_balance + amount_from_position;
+        assert!(
+            amount >= self.min_deposit_amount,
+            "A locking position cannot have less than {} $META.",
+            self.min_deposit_amount
+        );
+        // Check if position is unlocking.
+        assert!(
+            locking_position.unlocking_started_at.is_some(),
+            "Cannot re-lock a locked position."
+        );
 
+        let now = get_current_epoch_millis();
+        let unlocking_date = locking_position.unlocking_started_at.unwrap()
+            + locking_position.locking_period_millis();
 
-        // assert!(locking_position.unlocking_started_at.is_some(), "Cannot re-lock a locked position.");
-        // let now = get_current_epoch_millis();
-        // let unlocking_date = locking_position.unlocking_started_at.unwrap()
-        //     + locking_position.locking_period_millis();
+        if now < unlocking_date {
+            // Position is **unlocking**.
+            let remaining = unlocking_date - now;
+            assert!(
+                remaining > days_to_millis(locking_period),
+                "The new locking period should be greater than {} days.",
+                millis_to_days(remaining)
+            );
 
-        // let amount = amount.0;
-        // if unlocking_date < now {
-        //     self.new_relock(&mut voter, &locking_position, index, amount, locking_period);
-        // } else {
-        //     let remaining_period = unlocking_date - now;
-        //     let min_locking_period_millis = days_to_millis(self.min_locking_period);
-        //     assert!(
-        //         remaining_period > min_locking_period_millis,
-        //         "The remaining period to unlock is less than the min locking period {} days",
-        //         self.min_locking_period
-        //     );
-        // }
-
-        // //// -----> RELOCKING IS CONSTRAINED BY THE AMOUNT, IT SHOULD BE GREATER THAN THE REMAINING.
-
-        // // if (unlocking_date - now) > days_to_millis(self.min_locking_period) {
-        // //     locking_period
-        // // }
-        // // if let Some(date) = locking_position.unlocking_started_at {
-        // //     if unlocking_date < now {
-        // //     }
-        // // }
-        // // // if locking_position.is_unlocking() {
-        // // //     let
-        // // //     assert!(locking_position)
-        // // // }
-        // // // assert!(locking_position.is_unlocking(), "Relock only an unlocking position");
+            let new_amount = locking_position.amount - amount_from_position;
+            assert!(
+                amount >= self.min_deposit_amount,
+                "A locking position cannot have less than {} $META.",
+                self.min_deposit_amount
+            );
+            locking_position.amount = new_amount;
+            voter.locking_positions.replace(index, &locking_position);
+        } else {
+            voter.balance += (locking_position.amount - amount_from_position);
+            voter.remove_position(index);
+        }
+        voter.balance -= amount_from_balance;
+        self.deposit_locking_position(
+            amount,
+            locking_period,
+            voter_id,
+            &mut voter
+        );
     }
 
     pub fn relock_from_balance(
@@ -229,51 +240,23 @@ impl MetaVoteContract {
         let voter_id = env::predecessor_account_id();
         let mut voter = self.internal_get_voter(&voter_id);
 
-        // // Check voter balance and unlocking position amount.
-        // let amount_from_position = amount_from_position.0;
-        // let amount_from_balance = amount_from_balance.0;
-        // assert!(
-        //     voter.balance >= amount_from_balance,
-        //     "Not enough balance."
-        // );
-        // assert!(
-        //     voter.balance >= amount_from_balance,
-        //     "Not enough balance."
-        // );
-
-
-        // assert!(locking_position.unlocking_started_at.is_some(), "Cannot re-lock a locked position.");
-        // let now = get_current_epoch_millis();
-        // let unlocking_date = locking_position.unlocking_started_at.unwrap()
-        //     + locking_position.locking_period_millis();
-
-        // let amount = amount.0;
-        // if unlocking_date < now {
-        //     self.new_relock(&mut voter, &locking_position, index, amount, locking_period);
-        // } else {
-        //     let remaining_period = unlocking_date - now;
-        //     let min_locking_period_millis = days_to_millis(self.min_locking_period);
-        //     assert!(
-        //         remaining_period > min_locking_period_millis,
-        //         "The remaining period to unlock is less than the min locking period {} days",
-        //         self.min_locking_period
-        //     );
-        // }
-
-        //// -----> RELOCKING IS CONSTRAINED BY THE AMOUNT, IT SHOULD BE GREATER THAN THE REMAINING.
-
-        // if (unlocking_date - now) > days_to_millis(self.min_locking_period) {
-        //     locking_period
-        // }
-        // if let Some(date) = locking_position.unlocking_started_at {
-        //     if unlocking_date < now {
-        //     }
-        // }
-        // // if locking_position.is_unlocking() {
-        // //     let
-        // //     assert!(locking_position)
-        // // }
-        // // assert!(locking_position.is_unlocking(), "Relock only an unlocking position");
+        let amount = amount_from_balance.0;
+        assert!(
+            voter.balance >= amount,
+            "Not enough balance."
+        );
+        assert!(
+            amount >= self.min_deposit_amount,
+            "A locking position cannot have less than {} $META.",
+            self.min_deposit_amount
+        );
+        voter.balance -= amount;
+        self.deposit_locking_position(
+            amount,
+            locking_period,
+            voter_id,
+            &mut voter
+        );
     }
 
     // ****************
