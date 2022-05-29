@@ -72,6 +72,11 @@ pub fn to_nanos(num_days: u64) -> u64 {
     return num_days * 86400_000_000_000
 }
 
+#[inline]
+pub fn nanos_to_millis(nanoseconds: u64) -> EpochMillis {
+    nanoseconds / 1_000_000
+}
+
 pub fn to_ts(num_days: u64) -> u64 {
     // 2018-08-01 UTC in nanoseconds
     1533081600_000_000_000 + to_nanos(num_days)

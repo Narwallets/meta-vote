@@ -124,7 +124,7 @@ impl MetaVoteContract {
     ) {
         let voter_id = env::predecessor_account_id();
         let mut voter = self.internal_get_voter(&voter_id);
-        let mut locking_position = voter.locking_positions.get(index)
+        let locking_position = voter.locking_positions.get(index)
             .expect("Locking position not found!");
 
         // Check voter balance and unlocking position amount.
@@ -147,7 +147,7 @@ impl MetaVoteContract {
             // Position is **unlocking**.
             let remaining = unlocking_date - now;
             assert!(
-                remaining > days_to_millis(locking_period),
+                remaining < days_to_millis(locking_period),
                 "The new locking period should be greater than {} days.",
                 millis_to_days(remaining)
             );
@@ -220,7 +220,7 @@ impl MetaVoteContract {
             locking_position.amount = new_amount;
             voter.locking_positions.replace(index, &locking_position);
         } else {
-            voter.balance += (locking_position.amount - amount_from_position);
+            voter.balance += locking_position.amount - amount_from_position;
             voter.remove_position(index);
         }
         voter.balance -= amount_from_balance;
@@ -327,15 +327,6 @@ mod tests {
     mod utils;
     use utils::*;
     use super::*;
-
-    fn basic_context() -> VMContext {
-        get_context(
-            meta_token_account(),
-            ntoy(TEST_INITIAL_BALANCE),
-            0,
-            to_ts(GENESIS_TIME_IN_DAYS),
-        )
-    }
 
     fn new_contract() -> MetaVoteContract {
         MetaVoteContract::new(
@@ -610,4 +601,84 @@ mod tests {
         );
         assert_eq!(voter.voting_power, total_vote_power, "Voting power was not removed!");
     }
+
+    fn generate_relock_position_context() -> MetaVoteContract {
+        const LOCKING_PERIOD: u64 = 100;
+        let timestamp_0 = to_ts(GENESIS_TIME_IN_DAYS);
+        let timestamp_1 = to_ts(GENESIS_TIME_IN_DAYS + 5);
+        let timestamp_2 = to_ts(GENESIS_TIME_IN_DAYS + 5 + LOCKING_PERIOD);
+        let context = get_context(
+            meta_token_account(),
+            ntoy(TEST_INITIAL_BALANCE),
+            0,
+            timestamp_0,
+        );
+        let mut contract = get_contract_setup(context);
+
+        let sender_id: AccountId = voter_account();
+        let amount = U128::from(10 * YOCTO_UNITS);
+        let msg: String = LOCKING_PERIOD.to_string();
+        contract.ft_on_transfer(sender_id.clone(), amount.clone(), msg.clone());
+
+        // New context: the voter is doing the call now!
+        let context = get_context(
+            sender_id.clone(),
+            ntoy(TEST_INITIAL_BALANCE),
+            0,
+            timestamp_1,
+        );
+        testing_env!(context.clone());
+        let index = contract.get_all_locking_positions()
+            .first()
+            .unwrap()
+            .index
+            .unwrap();
+        contract.unlock_position(index);
+        let voter = contract.internal_get_voter(&sender_id);
+        let locking_position = voter.locking_positions.get(index).unwrap();
+        assert_eq!(
+            locking_position.unlocking_started_at.unwrap(),
+            nanos_to_millis(timestamp_1),
+            "Incorrect unlocking started at date."
+        );
+        assert_eq!(
+            locking_position.unlocking_started_at.unwrap()
+                + locking_position.locking_period_millis(),
+            nanos_to_millis(timestamp_2),
+            "Incorrect unlocking finish date."
+        );
+        assert_eq!(
+            BalanceJSON::from(0),
+            contract.get_locked_balance(),
+            "Incorrect locked balance!"
+        );
+        assert_eq!(
+            amount,
+            contract.get_unlocking_balance(),
+            "Incorrect unlocking balance!"
+        );
+        contract
+    }
+
+    #[test]
+    #[should_panic(expected="The new locking period should be greater than 88 days.")]
+    fn test_relock_position_1() {
+        let mut contract = generate_relock_position_context();
+        let timestamp_0 = to_ts(GENESIS_TIME_IN_DAYS + 5 + 12);
+        let sender_id: AccountId = voter_account();
+
+        // New context: the voter is doing the call now!
+        let context = get_context(
+            sender_id.clone(),
+            ntoy(TEST_INITIAL_BALANCE),
+            0,
+            timestamp_0,
+        );
+        testing_env!(context.clone());
+        contract.relock_position(0, 30, MetaJSON::from(0));
+    }
+
+    // fn test_relock_partial_position()
+
+    // fn test_relock_from_balance()
 }
