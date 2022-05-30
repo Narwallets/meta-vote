@@ -84,6 +84,8 @@ impl MetaVoteContract {
 
         let locking_period = locking_position.locking_period;
         let amount = Meta::from(amount);
+
+        // TODO: Fix this, do not panic! instead run outer function.
         assert!(
             locking_position.amount > amount,
             "Amount too large! If you want to remove all amount use the fn unlock_position"
@@ -206,7 +208,7 @@ impl MetaVoteContract {
             // Position is **unlocking**.
             let remaining = unlocking_date - now;
             assert!(
-                remaining > days_to_millis(locking_period),
+                remaining < days_to_millis(locking_period),
                 "The new locking period should be greater than {} days.",
                 millis_to_days(remaining)
             );
@@ -711,7 +713,6 @@ mod tests {
             voter.voting_power,
             contract.calculate_voting_power(amount, locking_period),
             "Voting power of Voter is incorrect.");
-
         assert_eq!(
             BalanceJSON::from(locking_position.amount),
             contract.get_locked_balance(),
@@ -761,7 +762,6 @@ mod tests {
             voter.voting_power,
             contract.calculate_voting_power(amount, locking_period),
             "Voting power of Voter is incorrect.");
-
         assert_eq!(
             BalanceJSON::from(locking_position.amount),
             contract.get_locked_balance(),
@@ -776,6 +776,172 @@ mod tests {
             locking_position.unlocking_started_at.is_none(),
             "Unlocking started should be None."
         );
+    }
+
+    #[test]
+    #[should_panic(expected="The new locking period should be greater than 77 days.")]
+    fn test_relock_partial_position_1() {
+        let mut contract = generate_relock_position_context();
+        let timestamp_0 = to_ts(GENESIS_TIME_IN_DAYS + 5 + 23);
+        let sender_id: AccountId = voter_account();
+
+        // New context: the voter is doing the call now!
+        let context = get_context(
+            sender_id.clone(),
+            ntoy(TEST_INITIAL_BALANCE),
+            0,
+            timestamp_0,
+        );
+        testing_env!(context.clone());
+        let index = contract.get_all_locking_positions()
+            .first()
+            .unwrap()
+            .index
+            .unwrap();
+        let voter = contract.internal_get_voter(&sender_id);
+        let locking_position = voter.locking_positions.get(index).unwrap();
+        contract.relock_partial_position(
+            index,
+            MetaJSON::from(
+                locking_position.amount - 2 * YOCTO_UNITS
+            ),
+            30,
+            MetaJSON::from(0)
+        );
+    }
+
+    #[test]
+    fn test_relock_partial_position_2() {
+        let mut contract = generate_relock_position_context();
+        let timestamp_0 = to_ts(GENESIS_TIME_IN_DAYS + 5 + 23);
+        let sender_id: AccountId = voter_account();
+
+        // New context: the voter is doing the call now!
+        let context = get_context(
+            sender_id.clone(),
+            ntoy(TEST_INITIAL_BALANCE),
+            0,
+            timestamp_0,
+        );
+        testing_env!(context.clone());
+        let index = contract.get_all_locking_positions()
+            .first()
+            .unwrap()
+            .index
+            .unwrap();
+        let voter = contract.internal_get_voter(&sender_id);
+        let locking_position = voter.locking_positions.get(index).unwrap();
+        assert_eq!(voter.voting_power, 0, "Voting power should be 0.");
+
+        let keep_amount = 2 * YOCTO_UNITS;
+        let relock_amount = locking_position.amount - keep_amount;
+        let locking_period: Days = 89;
+        contract.relock_partial_position(
+            index,
+            MetaJSON::from(relock_amount),
+            locking_period,
+            MetaJSON::from(0)
+        );
+
+        // The Unlocking is index 0, and the Relocked is index 1.
+        let index = contract.get_all_locking_positions()
+            .last()
+            .unwrap()
+            .index
+            .unwrap();
+        let voter = contract.internal_get_voter(&sender_id);
+        let locking_position = voter.locking_positions.get(index).unwrap();
+        assert_eq!(voter.locking_positions.len(), 2, "Incorrect locking position.");
+        assert_eq!(
+            voter.voting_power,
+            contract.calculate_voting_power(relock_amount, locking_period),
+            "Voting power of Voter is incorrect."
+        );
+        assert_eq!(
+            BalanceJSON::from(relock_amount),
+            contract.get_locked_balance(),
+            "Incorrect locked balance!"
+        );
+        assert_eq!(
+            BalanceJSON::from(keep_amount),
+            contract.get_unlocking_balance(),
+            "Incorrect unlocking balance!"
+        );
+        assert!(
+            locking_position.unlocking_started_at.is_none(),
+            "Unlocking started should be None."
+        );
+    }
+
+    #[test]
+    fn test_relock_partial_position_3() {
+        let mut contract = generate_relock_position_context();
+        let timestamp_0 = to_ts(GENESIS_TIME_IN_DAYS + 5 + 177);
+        let sender_id: AccountId = voter_account();
+
+        // New context: the voter is doing the call now!
+        let context = get_context(
+            sender_id.clone(),
+            ntoy(TEST_INITIAL_BALANCE),
+            0,
+            timestamp_0,
+        );
+        testing_env!(context.clone());
+        let index = contract.get_all_locking_positions()
+            .first()
+            .unwrap()
+            .index
+            .unwrap();
+        let voter = contract.internal_get_voter(&sender_id);
+        let locking_position = voter.locking_positions.get(index).unwrap();
+        assert_eq!(voter.voting_power, 0, "Voting power should be 0.");
+
+        let keep_amount = 2 * YOCTO_UNITS;
+        let relock_amount = locking_position.amount - keep_amount;
+        let locking_period: Days = 30;
+        contract.relock_partial_position(
+            index,
+            MetaJSON::from(relock_amount),
+            locking_period,
+            MetaJSON::from(0)
+        );
+
+        // The Unlocking is index 0, and the Relocked is ALSO index 0.
+        let voter = contract.internal_get_voter(&sender_id);
+        let locking_position = voter.locking_positions.get(index).unwrap();
+        assert_eq!(voter.locking_positions.len(), 1, "Incorrect locking position.");
+        assert_eq!(
+            voter.voting_power,
+            contract.calculate_voting_power(relock_amount, locking_period),
+            "Voting power of Voter is incorrect."
+        );
+        assert_eq!(
+            voter.balance,
+            keep_amount,
+            "Voter balance is incorrect."
+        );
+        assert_eq!(
+            BalanceJSON::from(keep_amount),
+            contract.get_balance(),
+            "Incorrect free balance!"
+        );
+        assert_eq!(
+            BalanceJSON::from(relock_amount),
+            contract.get_locked_balance(),
+            "Incorrect locked balance!"
+        );
+        assert_eq!(
+            BalanceJSON::from(0),
+            contract.get_unlocking_balance(),
+            "Incorrect unlocking balance!"
+        );
+        assert!(
+            locking_position.unlocking_started_at.is_none(),
+            "Unlocking started should be None."
+        );
+
+        contract.unlock_position(index);
+        // WIP -----------------------------
     }
 
     // fn test_relock_partial_position()
