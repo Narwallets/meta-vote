@@ -4,17 +4,18 @@ use near_sdk::{env, log, near_bindgen, AccountId, Balance, PanicOnDefault};
 
 mod constants;
 mod deposit;
-mod interface;
 mod internal;
 mod locking_position;
 mod types;
 mod utils;
 mod vote_position;
 mod voter;
+mod withdraw;
+pub mod interface;
+
 use types::*;
 use utils::get_current_epoch_millis;
 use voter::Voter;
-
 use crate::utils::{days_to_millis, millis_to_days};
 use crate::{constants::*, vote_position::*, locking_position::*};
 
@@ -292,6 +293,7 @@ impl MetaVoteContract {
     // ******************
 
     pub fn clear_locking_position(&mut self, position_index_list: Vec<PositionIndex>) {
+        assert_ne!(position_index_list.len(), 0, "Index list is empty.");
         let voter_id = env::predecessor_account_id();
         let mut voter = self.internal_get_voter(&voter_id);
         let mut position_index_list = position_index_list;
@@ -306,6 +308,39 @@ impl MetaVoteContract {
             }
         }
         self.voters.insert(&voter_id, &voter);
+    }
+
+    // ************
+    // * Withdraw *
+    // ************
+
+    pub fn withdraw(
+        &mut self,
+        position_index_list: Vec<PositionIndex>,
+        amount_from_balance: MetaJSON
+    ) {
+        let voter_id = env::predecessor_account_id();
+        let mut voter = self.internal_get_voter(&voter_id);
+        let amount_from_balance = Meta::from(amount_from_balance);
+        assert!(voter.balance >= amount_from_balance, "Not enough balance.");
+        let remaining_balance = voter.balance - amount_from_balance;
+
+        // Clear locking positions could increase the voter balance.
+        if position_index_list.len() > 0 {
+            self.clear_locking_position(position_index_list);
+        }
+
+        let total_to_withdraw = voter.balance - remaining_balance;
+        assert!(total_to_withdraw > 0, "Nothing to withdraw.");
+        voter.balance -= total_to_withdraw;
+
+        if voter.is_empty() {
+            self.voters.remove(&voter_id);
+            log!("GODSPEED: {} is no longer part of Meta Vote!", &voter_id);
+        } else {
+            self.voters.insert(&voter_id, &voter);
+        }
+        self.transfer_meta_to_voter(voter_id, total_to_withdraw);
     }
 
     // ****************

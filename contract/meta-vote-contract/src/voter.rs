@@ -23,6 +23,10 @@ impl Voter {
         }
     }
 
+    pub(crate) fn is_empty(&self) -> bool {
+        self.balance == 0 && self.locking_positions.is_empty()
+    }
+
     pub(crate) fn sum_locked(&self) -> Meta {
         let mut result = 0_u128;
         for locking_position in self.locking_positions.iter() {
