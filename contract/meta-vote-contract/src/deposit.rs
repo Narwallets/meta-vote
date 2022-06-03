@@ -1,6 +1,6 @@
 use crate::*;
 use near_sdk::json_types::U128;
-use near_sdk::{env, require, log, near_bindgen, PromiseOrValue};
+use near_sdk::{env, log, near_bindgen, PromiseOrValue};
 
 use near_contract_standards::fungible_token::receiver::FungibleTokenReceiver;
 
