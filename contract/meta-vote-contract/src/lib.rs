@@ -1,6 +1,6 @@
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::collections::{UnorderedMap, Vector};
-use near_sdk::{env, log, near_bindgen, AccountId, Balance, PanicOnDefault};
+use near_sdk::{env, log, near_bindgen, AccountId, Balance, PanicOnDefault, require};
 
 mod constants;
 mod deposit;
@@ -44,8 +44,8 @@ impl MetaVoteContract {
         max_voting_positions: u8,
         meta_token_contract_address: ContractAddress,
     ) -> Self {
-        // assert!(!env::state_exists(), "The contract is already initialized");
-        assert!(min_locking_period < max_locking_period, "Review the min and max locking period");
+        // require!(!env::state_exists(), "The contract is already initialized");
+        require!(min_locking_period < max_locking_period, "Review the min and max locking period");
         Self {
             owner_id,
             voters: UnorderedMap::new(Keys::Voter),
@@ -68,7 +68,7 @@ impl MetaVoteContract {
         let mut locking_position = voter.get_position(index);
 
         let voting_power = locking_position.voting_power;
-        assert!(voter.voting_power >= voting_power, "Not enough free voting power to unlock!");
+        require!(voter.voting_power >= voting_power, "Not enough free voting power to unlock!");
 
         log!(
             "UNLOCK: {} unlocked position {}.",
@@ -93,7 +93,7 @@ impl MetaVoteContract {
         if amount == locking_position.amount {
             return self.unlock_position(index);
         }
-        assert!(
+        require!(
             locking_position.amount > amount,
             "Amount too large!"
         );
@@ -103,7 +103,7 @@ impl MetaVoteContract {
             self.min_deposit_amount
         );
         let remove_voting_power = self.calculate_voting_power(amount, locking_period);
-        assert!(
+        require!(
             locking_position.voting_power >= remove_voting_power
                 && voter.voting_power >= remove_voting_power,
             "Not enough free voting power to unlock!"
@@ -142,12 +142,12 @@ impl MetaVoteContract {
 
         // Check voter balance and unlocking position amount.
         let amount_from_balance = amount_from_balance.0;
-        assert!(
+        require!(
             voter.balance >= amount_from_balance,
             "Not enough balance."
         );
         // Check if position is unlocking.
-        assert!(
+        require!(
             locking_position.unlocking_started_at.is_some(),
             "Cannot re-lock a locked position."
         );
@@ -196,11 +196,11 @@ impl MetaVoteContract {
         // Check voter balance and unlocking position amount.
         let amount_from_balance = amount_from_balance.0;
         let amount_from_position = amount_from_position.0;
-        assert!(
+        require!(
             voter.balance >= amount_from_balance,
             "Not enough balance."
         );
-        assert!(
+        require!(
             locking_position.amount >= amount_from_position,
             "Locking position amount is not enough."
         );
@@ -211,7 +211,7 @@ impl MetaVoteContract {
             self.min_deposit_amount
         );
         // Check if position is unlocking.
-        assert!(
+        require!(
             locking_position.unlocking_started_at.is_some(),
             "Cannot re-lock a locked position."
         );
@@ -265,7 +265,7 @@ impl MetaVoteContract {
         let mut voter = self.internal_get_voter(&voter_id);
 
         let amount = amount_from_balance.0;
-        assert!(
+        require!(
             voter.balance >= amount,
             "Not enough balance."
         );
@@ -293,7 +293,7 @@ impl MetaVoteContract {
     // ******************
 
     pub fn clear_locking_position(&mut self, position_index_list: Vec<PositionIndex>) {
-        assert_ne!(position_index_list.len(), 0, "Index list is empty.");
+        require!(position_index_list.len() > 0, "Index list is empty.");
         let voter_id = env::predecessor_account_id();
         let mut voter = self.internal_get_voter(&voter_id);
         let mut position_index_list = position_index_list;
@@ -322,7 +322,7 @@ impl MetaVoteContract {
         let voter_id = env::predecessor_account_id();
         let mut voter = self.internal_get_voter(&voter_id);
         let amount_from_balance = Meta::from(amount_from_balance);
-        assert!(voter.balance >= amount_from_balance, "Not enough balance.");
+        require!(voter.balance >= amount_from_balance, "Not enough balance.");
         let remaining_balance = voter.balance - amount_from_balance;
 
         // Clear locking positions could increase the voter balance.
@@ -331,7 +331,7 @@ impl MetaVoteContract {
         }
 
         let total_to_withdraw = voter.balance - remaining_balance;
-        assert!(total_to_withdraw > 0, "Nothing to withdraw.");
+        require!(total_to_withdraw > 0, "Nothing to withdraw.");
         voter.balance -= total_to_withdraw;
 
         if voter.is_empty() {

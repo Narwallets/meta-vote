@@ -1,6 +1,6 @@
 use crate::*;
 use near_sdk::json_types::U128;
-use near_sdk::{env, log, near_bindgen, PromiseOrValue};
+use near_sdk::{env, require, log, near_bindgen, PromiseOrValue};
 
 use near_contract_standards::fungible_token::receiver::FungibleTokenReceiver;
 
@@ -27,7 +27,7 @@ impl FungibleTokenReceiver for MetaVoteContract {
             env::predecessor_account_id(),
             self.meta_token_contract_address,
             "This contract only works with $META from {}",
-            self.meta_token_contract_address
+            self.meta_token_contract_address.to_string()
         );
 
         self.assert_min_deposit_amount(amount);
