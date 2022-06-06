@@ -358,10 +358,10 @@ impl MetaVoteContract {
         let voter_id = env::predecessor_account_id();
         let mut voter = self.internal_get_voter(&voter_id);
         let voting_power = VotingPower::from(voting_power);
-        require!(voter.voting_power > voting_power, "Not enough available Voting Power.");
+        require!(voter.voting_power >= voting_power, "Not enough available Voting Power.");
 
         let mut votes_for_address = voter.get_votes_for_address(&voter_id, &contract_address);
-        let mut votes = votes_for_address.get(&votable_object_id).unwrap();
+        let mut votes = votes_for_address.get(&votable_object_id).unwrap_or(0_u128);
 
         voter.voting_power -= voting_power;
         votes += voting_power;
