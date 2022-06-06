@@ -90,7 +90,6 @@ fn test_multiple_deposit_same_locking_period() {
     testing_env!(context.clone());
     assert_eq!(
         VotingPowerJSON::from(total_vote_power),
-        contract.get_available_voting_power(),
         "Incorrect voting power calculation!"
     );
 
@@ -738,7 +737,7 @@ fn test_unlock_position_without_voting_power() {
         .unwrap()
         .index
         .unwrap();
-    
+
     let vote = contract.calculate_voting_power(
         Meta::from(amount),
         msg.parse::<Days>().unwrap()
