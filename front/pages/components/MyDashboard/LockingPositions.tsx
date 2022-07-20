@@ -35,6 +35,7 @@ import InfoModal, { InfoContent } from './InfoModal';
 import { ACTION_TYPE, MODAL_TEXT } from '../../../constants';
 import { STATUS_CODES } from 'http';
 import moment from 'moment';
+import ButtonOnLogin from '../ButtonLogin';
 
 type Props = {
 }
@@ -52,7 +53,7 @@ const LockingPosition = (props: Props) => {
 
   const isDesktop = useBreakpointValue({ base: false, md: true });
 
-  const STATUS = ['Locked', 'Unlocked', 'Unloking...'];
+  const STATUS = ['Locked', 'Unlocked', 'Unlocking...'];
  
   const getVotingPositions = async ()=> {
     const newVoterData = voterData;
@@ -177,7 +178,7 @@ const LockingPosition = (props: Props) => {
                     <Th color={'blackAlpha.500'} fontSize={'2xl'} isNumeric>Voting Power</Th>
                     <Th color={'blackAlpha.500'} fontSize={'2xl'}isNumeric >$META amount</Th>
                     <Th color={'blackAlpha.500'} fontSize={'2xl'} isNumeric>Autolock days</Th>
-                    <Th color={'blackAlpha.500'} fontSize={'2xl'} isNumeric>Remainig time</Th>
+                    <Th color={'blackAlpha.500'} fontSize={'2xl'} isNumeric>Remaining time</Th>
                     <Th color={'blackAlpha.500'} fontSize={'2xl'}>Status</Th>
                     <Th color={'blackAlpha.500'} fontSize={'2xl'}>Action</Th>
                   </Tr>
@@ -189,9 +190,12 @@ const LockingPosition = (props: Props) => {
                     voterData.lockingPositions.length === 0 && (
                       <Flex minH={400} direction='column' alignItems={'center'} justifyContent={'center'}>
                         <Heading fontSize={'2xl'} >😅 You don’t have Voting Power</Heading>
-                        <Button w={350} fontSize={{ base: "md", md: "xl" }}  onClick={onOpen} colorScheme={colors.secundary}>
-                          Lock $META to get Voting Power
-                        </Button>
+                        <ButtonOnLogin>
+                          <Button w={350} fontSize={{ base: "md", md: "xl" }}  onClick={onOpen} colorScheme={colors.secundary}>
+                            Lock $META to get Voting Power
+                          </Button>
+                        </ButtonOnLogin>
+                        
                       </Flex>
                     )
                   }
