@@ -175,7 +175,6 @@ const LockModal = (props: Props) => {
                   </SliderTrack>
                   <SliderThumb bg={colors.primary+'.500'} boxSize={6} />
                 </Slider>
-                
                 <HStack align={{base:'flex-start', md:'flex-Start'}} justify={'space-between'}>
                   <HStack >
                     <Image boxSize="16px" alt={'lock-icon'} src={'./icons/lock_bold.png'}></Image>
