@@ -15,7 +15,7 @@ mod internal;
 mod locking_position;
 mod types;
 mod utils;
-mod views;
+pub mod views;
 mod voter;
 mod withdraw;
 mod interface;
