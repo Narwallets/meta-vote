@@ -6,7 +6,6 @@ use near_sdk::json_types::U128;
 /*   View functions   */
 /**********************/
 
-#[near_bindgen]
 impl MetaVoteContract {
     pub fn get_balance(&self, voter_id: VoterId) -> U128 {
         let voter = self.internal_get_voter(&voter_id);
@@ -39,7 +38,6 @@ impl MetaVoteContract {
     } 
 }
 
-#[near_bindgen]
 impl MetaVoteContract {
     pub fn get_all_locking_positions(
         &self,
