@@ -1,4 +1,4 @@
-# Meta Vote
+# Meta Vote Contract
 
 ![Meta Vote Logo](media/logo.png)
 
