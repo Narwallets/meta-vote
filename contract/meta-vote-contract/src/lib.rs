@@ -147,6 +147,7 @@ impl MetaVoteContract {
         locking_period: Days,
         amount_from_balance: U128
     ) {
+        log!("DEBUG: storage before re-locking position: {}", env::storage_usage());
         let voter_id = env::predecessor_account_id();
         let mut voter = self.internal_get_voter(&voter_id);
         let locking_position = voter.get_position(index);
@@ -192,6 +193,7 @@ impl MetaVoteContract {
             voter_id,
             &mut voter
         );
+        log!("DEBUG: storage after re-locking position: {}", env::storage_usage());
     }
 
     pub fn relock_partial_position(
@@ -397,6 +399,7 @@ impl MetaVoteContract {
         contract_address: ContractAddress,
         votable_object_id: VotableObjId
     ) {
+        log!("DEBUG: storage before voting position: {}", env::storage_usage());
         let voter_id = env::predecessor_account_id();
         let mut voter = self.internal_get_voter(&voter_id);
         let voting_power = VotingPower::from(voting_power);
@@ -434,6 +437,7 @@ impl MetaVoteContract {
             &contract_address,
             &votable_object_id
         );
+        log!("DEBUG: storage after voting position: {}", env::storage_usage());
     }
 
     pub fn rebalance(

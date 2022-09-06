@@ -10,8 +10,9 @@ impl FungibleTokenReceiver for MetaVoteContract {
         &mut self,
         sender_id: AccountId,
         amount: U128,
-        msg: String,
+        msg: String
     ) -> PromiseOrValue<U128> {
+        log!("DEBUG: storage before creating locking position: {}", env::storage_usage());
         let locking_period = match msg.parse::<Days>() {
             Ok(days) => days,
             Err(_) => panic!(
@@ -39,6 +40,7 @@ impl FungibleTokenReceiver for MetaVoteContract {
         let mut voter = self.internal_get_voter(&voter_id);
         self.deposit_locking_position(amount, locking_period, voter_id, &mut voter);
 
+        log!("DEBUG: storage after creating locking position: {}", env::storage_usage());
         // Return unused amount
         PromiseOrValue::Value(U128::from(0))
     }
