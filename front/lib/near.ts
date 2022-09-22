@@ -349,6 +349,7 @@ const callChangeMetaTokenMethod = async (method: string, args: any) => {
       ],
     })
     .catch((err) => {
+      console.error(err)
       console.error(`Failed to call metavote contract -- method: ${method}`);
       throw err;
     });

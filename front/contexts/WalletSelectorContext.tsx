@@ -10,7 +10,7 @@ import { setupModal } from "@near-wallet-selector/modal-ui";
 import type { WalletSelectorModal } from "@near-wallet-selector/modal-ui";
 import { setupMyNearWallet } from "@near-wallet-selector/my-near-wallet";
 import { setupMathWallet } from "@near-wallet-selector/math-wallet";
-import { setupNarwallets } from "@near-wallet-selector/narwallets/src"
+import { setupNarwallets } from "@near-wallet-selector/narwallets"
 import { setupLedger } from "@near-wallet-selector/ledger";
 import { CONTRACT_ID, METAPOOL_CONTRACT_ID, NETWORK_ID } from "../lib/near"
 import { getConfig } from "../config";
