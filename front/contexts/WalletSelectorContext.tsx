@@ -11,6 +11,7 @@ import type { WalletSelectorModal } from "@near-wallet-selector/modal-ui";
 import { setupMyNearWallet } from "@near-wallet-selector/my-near-wallet";
 import { setupMathWallet } from "@near-wallet-selector/math-wallet";
 import { setupNarwallets } from "@near-wallet-selector/narwallets"
+import { setupNightly } from "@near-wallet-selector/nightly"
 import { setupLedger } from "@near-wallet-selector/ledger";
 import { CONTRACT_ID, METAPOOL_CONTRACT_ID, NETWORK_ID } from "../lib/near"
 import { getConfig } from "../config";
@@ -77,7 +78,7 @@ export const WalletSelectorContextProvider: React.FC = ({ children }) => {
         // setupMyNearWallet(),
         // setupSender(),
         setupMathWallet(),
-        // setupNightly(),
+        setupNightly(),
         // setupLedger(),
         setupWalletConnect({
           projectId: "3ec2226fd3f38b6fb82e789fcfc232bf",
@@ -100,7 +101,7 @@ export const WalletSelectorContextProvider: React.FC = ({ children }) => {
       ],
     });
 
-  
+
     const _modal = setupModal(_selector, { contractId: CONTRACT_ID || "" });
     const state = _selector.store.getState();
     setAccounts(state.accounts);
@@ -109,7 +110,7 @@ export const WalletSelectorContextProvider: React.FC = ({ children }) => {
     window.modal = _modal;
     window.account_id = _selector.isSignedIn()
       ? _selector.store.getState().accounts.find((account) => account.active)
-          ?.accountId || null
+        ?.accountId || null
       : null;
     window.wallet = _selector.isSignedIn() ? await _selector.wallet() : null;
     setSelector(_selector);
