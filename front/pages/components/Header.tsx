@@ -18,7 +18,7 @@ import {
   IconButton,
   useBreakpointValue,
 } from "@chakra-ui/react";
-import {  ExternalLinkIcon, HamburgerIcon } from "@chakra-ui/icons";
+import { ExternalLinkIcon, HamburgerIcon } from "@chakra-ui/icons";
 import {
   getMetaBalance,
   getNearConfig,
@@ -64,7 +64,11 @@ const Header: React.FC<ButtonProps> = (props) => {
   useEffect(() => {
     (async () => {
       try {
-        updateBalance();
+        if (selector.isSignedIn() && accountId) {
+          window.account_id = accountId;
+          window.wallet = await selector.wallet();
+          setBalance(await getMetaBalance());
+        }
       } catch (e) {
         console.error(e);
       }
@@ -72,7 +76,10 @@ const Header: React.FC<ButtonProps> = (props) => {
 
     setInterval(async () => {
       try {
-       updateBalance();
+        if (selector.isSignedIn() && accountId) {
+          window.account_id = accountId;
+          setBalance(await getMetaBalance());
+        }
       } catch (e) {
         console.error(e);
       }
@@ -87,74 +94,74 @@ const Header: React.FC<ButtonProps> = (props) => {
             <Image alt='logo metavote' src="/metavote_logo.svg"></Image>
             <Spacer />
 
-          
+
             {selector?.isSignedIn() ? (
-              <HStack spacing={{base: 1, md: 10}}>
+              <HStack spacing={{ base: 1, md: 10 }}>
                 <HStack>
                   <Square minW="30px">
                     <Image
-                      boxSize={{base: "10px", md: "20px"}}
+                      boxSize={{ base: "10px", md: "20px" }}
                       objectFit="cover"
                       src="/meta_white.png"
                       alt="meta"
                     />
                   </Square>
-                  <Text fontFamily={'Meta Space'} fontSize={{base:'10px',md:'18px'}} fontWeight={500}>{formatToLocaleNear(balance)}</Text>
+                  <Text fontFamily={'Meta Space'} fontSize={{ base: '10px', md: '18px' }} fontWeight={500}>{formatToLocaleNear(balance)}</Text>
                 </HStack>
 
-                 {
+                {
                   isDesktop && (
                     <HStack
                       cursor="pointer"
                       alignItems="center"
-                      p={"5px 16px"} 
-                      borderRadius={100} 
-                      backgroundColor={colors.primary+".900"}>
+                      p={"5px 16px"}
+                      borderRadius={100}
+                      backgroundColor={colors.primary + ".900"}>
                       <Link fontWeight={500} href={nearConfig.refFinance} isExternal>
                         Get more $META
                       </Link>
                       <ExternalLinkIcon></ExternalLinkIcon>
                     </HStack>
-                  
+
                   )
-                 }
-                 {
-                 isDesktop && selector?.isSignedIn() && (
-                  <Link href={`${nearConfig.explorerUrl}/accounts/${accountId}`} isExternal>
-                    <HStack
-                      onClick={() => router.push(`/`)}
-                      cursor="pointer"
-                      alignItems="center"
-                      p={"5px 16px"} 
-                      borderRadius={100} 
-                      backgroundColor={colors.primary+".900"}
-                    >
-                        <Text  noOfLines={1} maxW={'20vw'}   fontWeight={500} >{accountId} </Text>
+                }
+                {
+                  isDesktop && selector?.isSignedIn() && (
+                    <Link href={`${nearConfig.explorerUrl}/accounts/${accountId}`} isExternal>
+                      <HStack
+                        onClick={() => router.push(`/`)}
+                        cursor="pointer"
+                        alignItems="center"
+                        p={"5px 16px"}
+                        borderRadius={100}
+                        backgroundColor={colors.primary + ".900"}
+                      >
+                        <Text noOfLines={1} maxW={'20vw'} fontWeight={500} >{accountId} </Text>
                         <ExternalLinkIcon ></ExternalLinkIcon>
-                    </HStack>
-                  </Link>
-                )}
-                  
+                      </HStack>
+                    </Link>
+                  )}
+
                 <Menu>
                   <MenuButton
                     as={IconButton}
                     icon={<Image src="/icons/dots.svg" h="22px" />}
                     variant="none"
-                    />
+                  />
                   <MenuList color={colors.primary}>
-                      
+
                     {
-                     selector?.isSignedIn() && ( 
+                      selector?.isSignedIn() && (
                         <>
                           <MenuItem fontSize={'xl'}
-                              as={"a"}
-                              href={`${nearConfig.explorerUrl}/accounts/${accountId}`}
-                              target="_blank"
-                              rel="noreferrer"
-                            >
-                              My Wallet
+                            as={"a"}
+                            href={`${nearConfig.explorerUrl}/accounts/${accountId}`}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            My Wallet
                           </MenuItem>
-                          <MenuItem  fontSize={'xl'}onClick={() => handleSignOut()}>Disconnect</MenuItem>
+                          <MenuItem fontSize={'xl'} onClick={() => handleSignOut()}>Disconnect</MenuItem>
                         </>
                       )
                     }
