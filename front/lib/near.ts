@@ -30,11 +30,11 @@ import {
   yton,
 } from "./util";
 
-export const CONTRACT_ID = process.env.NEXT_PUBLIC_CONTRACT_ID||"metavote.testnet";
+export const CONTRACT_ID = process.env.NEXT_PUBLIC_CONTRACT_ID || "metavote.testnet";
 const env = process.env.NEXT_PUBLIC_VERCEL_ENV || 'development';
 export const NETWORK_ID = process.env.NEXT_PUBLIC_VERCEL_ENV == 'production' ? 'mainnet' : 'testnet';
-export const METAPOOL_CONTRACT_ID = process.env.NEXT_PUBLIC_METAPOOL_CONTRACT_ID||"metavote.testnet";
-export const META_CONTRACT_ID =  process.env.NEXT_PUBLIC_META_CONTRACT_ID||"token.meta.pool.testnet";
+export const METAPOOL_CONTRACT_ID = process.env.NEXT_PUBLIC_METAPOOL_CONTRACT_ID || "metavote.testnet";
+export const META_CONTRACT_ID = process.env.NEXT_PUBLIC_META_CONTRACT_ID || "token.meta.pool.testnet";
 export const gas = new BN("70000000000000");
 export const GAS = "200000000000000";
 
@@ -78,7 +78,7 @@ export const getConnection = async () => {
     keyStore: new keyStores.BrowserLocalStorageKeyStore(),
   };
   const nearConnection = await connect(connectConfig);
-  return  nearConnection;
+  return nearConnection;
 }
 
 /* export const getAccount = async () => {
@@ -142,7 +142,7 @@ export const getStNearPrice = async () => {
 
 export const getMetapoolAccountInfo = async () => {
   const account_id = window.account_id;
-  return callViewMetapoolMethod( metaPoolMethods.getAccountInfo, {
+  return callViewMetapoolMethod(metaPoolMethods.getAccountInfo, {
     account_id: account_id,
   });
 };
@@ -150,7 +150,7 @@ export const getMetapoolAccountInfo = async () => {
 export const getMetaTokenAccountInfo = async () => {
   const account_id = window.account_id;
   if (!account_id) return 0;
-  return callViewMetaTokenMethod( metaTokenMethods.getMetas, {
+  return callViewMetaTokenMethod(metaTokenMethods.getMetas, {
     account_id: account_id,
   });
 };
@@ -231,12 +231,14 @@ const callPublicMetavoteMethod = async (method: string, args: any) => {
   return response;
 }; */
 
-const callChangeMetavoteMethod = async (method: string, args: any, deposit?: string): Promise<FinalExecutionOutcome | null> => {
+const callChangeMetavoteMethod = async (method: string, args: any, deposit?: string): Promise<void | FinalExecutionOutcome> => {
   const wallet = window.wallet;
   const account_id = window.account_id;
-  const result = await wallet!
-    .signAndSendTransaction({
-      signerId: account_id!,
+  if (!wallet) throw Error("no wallet")
+  if (!account_id) throw Error("no account_id")
+  try {
+    result = await wallet.signAndSendTransaction({
+      signerId: account_id,
       actions: [
         {
           type: "FunctionCall",
@@ -249,15 +251,40 @@ const callChangeMetavoteMethod = async (method: string, args: any, deposit?: str
         },
       ],
     })
-    .catch((err) => {
-      console.error(`Failed to call metavote contract -- method: ${method}`);
-      throw getPanicErrorFromText(err.message);
-    });
-    if (result instanceof Object) {
-      return result;
-    }
-  return null;
-};
+    return result
+  }
+  catch (err) {
+    console.error(err)
+    console.error(`Failed to call MetaVote contract -- method: ${method}`);
+    throw getPanicErrorFromText(err.message);
+  }
+}
+
+//   return wallet!.signAndSendTransaction({
+//       signerId: account_id!,
+//       actions: [
+//         {
+//           type: "FunctionCall",
+//           params: {
+//             methodName: method,
+//             args: args,
+//             gas: GAS,
+//             deposit: deposit ? deposit : '',
+//           },
+//         },
+//       ],
+//     })
+//     // .then((result)=>{
+//     //   if (result instanceof Object) {
+//     //     return result;
+//     //   }
+//     //   else return null;
+//     // })
+//     .catch((err) => {
+//       console.error(`Failed to call metavote contract -- method: ${method}`);
+//       throw getPanicErrorFromText(err.message);
+//     });
+// };
 
 const callPublicMetapoolMethod = async (method: string, args: any) => {
   const response: any = await provider.query({
@@ -332,9 +359,11 @@ export const getBalanceOfTokenForSupporter = async (
 const callChangeMetaTokenMethod = async (method: string, args: any) => {
   const wallet = window.wallet;
   const account_id = window.account_id;
+  if (!wallet) throw Error("no wallet")
+  if (!account_id) throw Error("no account_id")
   const result = await wallet!
     .signAndSendTransaction({
-      signerId: account_id!,
+      signerId: account_id,
       receiverId: META_CONTRACT_ID,
       actions: [
         {
@@ -350,12 +379,12 @@ const callChangeMetaTokenMethod = async (method: string, args: any) => {
     })
     .catch((err) => {
       console.error(err)
-      console.error(`Failed to call metavote contract -- method: ${method}`);
+      console.error(`Failed to call Meta-Token contract -- method: ${method}`);
       throw getPanicErrorFromText(err.message);
     });
-    if (result instanceof Object) {
-      return result;
-    }
+  if (result instanceof Object) {
+    return result;
+  }
   return null;
 };
 
@@ -371,33 +400,39 @@ const callChangeMetaTokenMethod = async (method: string, args: any) => {
 /*********** METAVOTE VIEW METHODS *************/
 
 export const getAvailableVotingPower = async () => {
-  return callPublicMetavoteMethod(metavoteViewMethods.getAvailableVotingPower, {voter_id: window.account_id
-});
+  return callPublicMetavoteMethod(metavoteViewMethods.getAvailableVotingPower, {
+    voter_id: window.account_id
+  });
 };
 
 export const getInUseVotingPower = async () => {
-  return callPublicMetavoteMethod(metavoteViewMethods.getUsedVotingPower, {voter_id: window.account_id
-});
+  return callPublicMetavoteMethod(metavoteViewMethods.getUsedVotingPower, {
+    voter_id: window.account_id
+  });
 };
 
 export const getAllLockingPositions = async () => {
-  return callPublicMetavoteMethod(metavoteViewMethods.getAllLockingPositions, {voter_id: window.account_id
-});
+  return callPublicMetavoteMethod(metavoteViewMethods.getAllLockingPositions, {
+    voter_id: window.account_id
+  });
 };
 
 export const getBalanceMetaVote = async () => {
-  return callPublicMetavoteMethod(metavoteViewMethods.getBalance, {voter_id: window.account_id
-});
+  return callPublicMetavoteMethod(metavoteViewMethods.getBalance, {
+    voter_id: window.account_id
+  });
 };
 
 export const getLockedBalance = async () => {
-  return callPublicMetavoteMethod(metavoteViewMethods.getLockedBalance, {voter_id: window.account_id
-});
+  return callPublicMetavoteMethod(metavoteViewMethods.getLockedBalance, {
+    voter_id: window.account_id
+  });
 };
 
 export const getUnlockingBalance = async () => {
-  return callPublicMetavoteMethod(metavoteViewMethods.getUnlockingBalance, {voter_id: window.account_id
-});
+  return callPublicMetavoteMethod(metavoteViewMethods.getUnlockingBalance, {
+    voter_id: window.account_id
+  });
 };
 
 export const getVotes = async (id: string, contract: string) => {
@@ -426,51 +461,51 @@ export const voteProject = async (id: string, contractName: string, votingPower:
     contract_address: contractName,
     votable_object_id: id
   }
-  return  callChangeMetavoteMethod( metavoteChangeMethods.vote, args, );
+  return callChangeMetavoteMethod(metavoteChangeMethods.vote, args,);
 };
 
-export const unvoteProject = async (id: string, contractNameId: string ) => {
+export const unvoteProject = async (id: string, contractNameId: string) => {
   const args = {
     contract_address: contractNameId,
     votable_object_id: id
   }
-  return  callChangeMetavoteMethod( metavoteChangeMethods.unvote, args);
+  return callChangeMetavoteMethod(metavoteChangeMethods.unvote, args);
 };
 
-export const lock = async (days: string, amount: string ) => {
+export const lock = async (days: string, amount: string) => {
   const args = {
     receiver_id: CONTRACT_ID,
     amount: amount,
     msg: days
   }
-  return  callChangeMetaTokenMethod( "ft_transfer_call", args);
+  return callChangeMetaTokenMethod("ft_transfer_call", args);
 };
 
-export const unlock = async (positionId: string ) => {
+export const unlock = async (positionId: string) => {
   const args = {
     index: positionId
   }
-  return  callChangeMetavoteMethod( metavoteChangeMethods.unlockPosition, args );
+  return callChangeMetavoteMethod(metavoteChangeMethods.unlockPosition, args);
 };
 
 export const withdrawAPosition = async (positionId: string) => {
   const args = {
-    position_index_list: positionId ? [positionId] : [], 
+    position_index_list: positionId ? [positionId] : [],
     amount_from_balance: '0'
   }
-  return  callChangeMetavoteMethod( metavoteChangeMethods.withdraw, args );
+  return callChangeMetavoteMethod(metavoteChangeMethods.withdraw, args);
 };
 
 export const withdrawAll = async () => {
   const args = {}
-  return  callChangeMetavoteMethod( metavoteChangeMethods.withdrawAll, args);
+  return callChangeMetavoteMethod(metavoteChangeMethods.withdrawAll, args);
 };
 
-export const relock = async (positionIndex: string, period: string, amount: string  ) => {
+export const relock = async (positionIndex: string, period: string, amount: string) => {
   const args = {
     index: positionIndex,
     locking_period: period,
     amount_from_balance: '0'
   }
-  return  callChangeMetavoteMethod( metavoteChangeMethods.relock, args );
+  return callChangeMetavoteMethod(metavoteChangeMethods.relock, args);
 };

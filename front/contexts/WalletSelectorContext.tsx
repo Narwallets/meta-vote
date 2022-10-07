@@ -83,8 +83,8 @@ export const WalletSelectorContextProvider: React.FC = ({ children }) => {
         // setupLedger(),
         setupWalletConnect({
           projectId:
-          process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID ||
-          "3ec2226fd3f38b6fb82e789fcfc232bf",
+            process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID ||
+            "3ec2226fd3f38b6fb82e789fcfc232bf",
           metadata: {
             name: "NEAR Wallet Selector for Meta Vote",
             description:
@@ -111,12 +111,9 @@ export const WalletSelectorContextProvider: React.FC = ({ children }) => {
     setAccounts(state.accounts);
 
     window.selector = _selector;
-    window.modal = _modal;
-    window.account_id = _selector.isSignedIn()
-      ? _selector.store.getState().accounts.find((account) => account.active)
-        ?.accountId || null
-      : null;
     window.wallet = _selector.isSignedIn() ? await _selector.wallet() : null;
+    window.modal = _modal;
+
     setSelector(_selector);
     setModal(_modal);
   }, []);
@@ -139,6 +136,7 @@ export const WalletSelectorContextProvider: React.FC = ({ children }) => {
         distinctUntilChanged()
       )
       .subscribe((nextAccounts) => {
+        window.account_id = (nextAccounts.find((account) => account.active)?.accountId) || null;
         setAccounts(nextAccounts);
       });
 

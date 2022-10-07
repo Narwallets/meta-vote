@@ -69,7 +69,7 @@ export const formatToLocaleNear = (value: number, decimals: number = 4) => {
 
 export const timeLeftTo = (time: any) => {
   if (!time || moment(time).diff(moment.utc()) < 0) {
-  //  return "";
+    //  return "";
   }
   const timeMoment = moment(time);
   const now = moment.utc();
@@ -77,13 +77,13 @@ export const timeLeftTo = (time: any) => {
   return timeMoment.diff(now, "days") > 0
     ? `${timeMoment.diff(now, "days")} days`
     : timeMoment.diff(now, "hours") >= 1
-    ? `${timeMoment.diff(now, "hours")} hours`
-    : `${timeMoment.diff(now, "minutes")} minutes`;
+      ? `${timeMoment.diff(now, "hours")} hours`
+      : `${timeMoment.diff(now, "minutes")} minutes`;
 };
 
 export const timeRemain = (time: any) => {
   if (!time || moment.utc().diff(moment(time)) < 0) {
-  //  return "";
+    //  return "";
   }
   const timeMoment = moment(time);
   const now = moment.utc();
@@ -91,8 +91,8 @@ export const timeRemain = (time: any) => {
   return now.diff(timeMoment, "days") > 0
     ? `${now.diff(timeMoment, "days")} days`
     : now.diff(timeMoment, "hours") >= 1
-    ? `${now.diff(timeMoment, "hours")} hours`
-    : `${now.diff(timeMoment, "minutes")} minutes`;
+      ? `${now.diff(timeMoment, "hours")} hours`
+      : `${now.diff(timeMoment, "minutes")} minutes`;
 };
 
 
@@ -148,7 +148,8 @@ export const getPanicError = (txResult: any) => {
   }
 };
 
-export const getPanicErrorFromText  = (text: string) => {
+export function getPanicErrorFromText(text: string) {
+  if (!text) return ""
   let result = text;
   const KEY = "panicked at ";
   const kl = KEY.length;
@@ -212,8 +213,8 @@ export enum POSITION_STATUS {
   UNLOKING,
 }
 
-export const getLockinPositionStatus = (position :any) : POSITION_STATUS => {
-  
+export const getLockinPositionStatus = (position: any): POSITION_STATUS => {
+
   if (position.is_locked) {
     return POSITION_STATUS.LOCKED;
   }

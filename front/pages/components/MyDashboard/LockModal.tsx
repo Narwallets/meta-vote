@@ -1,14 +1,14 @@
 import {
-  Box, 
-  Button, 
-  Text, 
+  Box,
+  Button,
+  Text,
   Modal,
   ModalOverlay,
   ModalContent,
   ModalHeader,
   ModalFooter,
   ModalBody,
-  ModalCloseButton, 
+  ModalCloseButton,
   InputGroup,
   InputLeftAddon,
   Input,
@@ -23,9 +23,9 @@ import {
   Square,
   Image,
   Flex,
-  Stack
+  Stack,
 } from '@chakra-ui/react';
-import React, {  useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { colors } from '../../../constants/colors';
 import { lock } from '../../../lib/near';
 import { useFormik } from 'formik';
@@ -35,14 +35,14 @@ import { useStore as useBalance } from "../../../stores/balance";
 import { MAX_LOCK_DAYS, MIN_LOCK_DAYS } from '../../../constants';
 
 type Props = {
-  isOpen: any, 
+  isOpen: any,
   onClose: any,
 }
 
 const LockModal = (props: Props) => {
-  const { isOpen, onClose} = props;
-  const [ sliderValue, setSliderValue] = useState(MIN_LOCK_DAYS);
-  const [ vPowerSim, setVPowerSim] = useState(0);
+  const { isOpen, onClose } = props;
+  const [sliderValue, setSliderValue] = useState(MIN_LOCK_DAYS);
+  const [vPowerSim, setVPowerSim] = useState(0);
   const { balance } = useBalance();
 
   const initialValuesDeposit: any = {
@@ -66,12 +66,12 @@ const LockModal = (props: Props) => {
     }
   });
 
-  const inputChange = (e: any, blur?: boolean)=>{
+  const inputChange = (e: any, blur?: boolean) => {
     updateVpowerSim(e.target.value);
     blur ? formikLock.handleBlur(e) : formikLock.handleChange(e);
   }
 
-  const updateVpowerSim = (amount? : any)=> {
+  const updateVpowerSim = (amount?: any) => {
     const vPower = calculateVPower(sliderValue, amount ? amount : formikLock.values.amount_lock);
     setVPowerSim(vPower);
   }
@@ -82,10 +82,10 @@ const LockModal = (props: Props) => {
   }
 
   const getMultiplierPerDays = (days: number) => {
-    if(!days) {
+    if (!days) {
       return 1;
     }
-    return  1 + (4 * (days - MIN_LOCK_DAYS) / (MAX_LOCK_DAYS - MIN_LOCK_DAYS));
+    return 1 + (4 * (days - MIN_LOCK_DAYS) / (MAX_LOCK_DAYS - MIN_LOCK_DAYS));
   }
 
   useEffect(() => {
@@ -99,113 +99,115 @@ const LockModal = (props: Props) => {
     updateVpowerSim();
   }, [sliderValue])
 
-  
-  
 
-  const maxButtonClicked = ()=> {
-    formikLock.setValues({amount_lock: balance.toString(), balance: balance});
+
+
+  const maxButtonClicked = () => {
+    formikLock.setValues({ amount_lock: balance.toString(), balance: balance });
     updateVpowerSim(balance);
 
   }
-  
-  const lockMetas = (values: any)=> {
+
+  const lockMetas = async (values: any) => {
     try {
-      lock( sliderValue.toString(), ntoy(formikLock.values.amount_lock));
+      await lock(sliderValue.toString(), ntoy(formikLock.values.amount_lock));
+      //TODO: close form
     }
     catch (error) {
+      //TODO: show toast
       console.error(error);
-    } 
+    }
   }
 
   return (
-      <Modal isOpen={isOpen} onClose={onClose} isCentered>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader textAlign={'center'} fontWeight={700}>New Lock Position</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            <VStack spacing={4} align={'flex-start'}>
-              <HStack spacing={10}>
-                  <InputGroup  colorScheme={colors.primary} size='lg'>
-                    <InputLeftAddon bg={'#efefef'}> 
-                          <Square minW="30px">
-                            <Image
-                              boxSize="20px"
-                              objectFit="cover"
-                              src="/meta_black.png"
-                              alt="stnear"
-                            />
-                          </Square>
-                    </InputLeftAddon>
-                    <Input
-                        autoFocus={true}
-                        id="amount_lock"
-                        name="amount_lock"
-                        type="number"
-                        bg={'#efefef'}
-                        colorScheme={colors.primary} 
-                        value={formikLock.values.amount_lock||""}
-                        onPaste={(e)=> inputChange(e)}
-                        onBlur={(e)=> inputChange(e, true)}
-                        onChange={(e)=> inputChange(e)}
-                    ></Input>
-                    <InputRightAddon bg={'#efefef'}>
-                      <Button colorScheme={colors.primary} borderRadius={100} color={'white'}  h='1.75rem' size='sm' onClick={()=>maxButtonClicked()}>
-                        Max
-                      </Button>
-                    </InputRightAddon>  
-                  </InputGroup>
+    <Modal isOpen={isOpen} onClose={onClose} isCentered>
+      <ModalOverlay />
+      <ModalContent>
+        <ModalHeader textAlign={'center'} fontWeight={700}>New Lock Position</ModalHeader>
+        <ModalCloseButton />
+        <ModalBody>
+          <VStack spacing={4} align={'flex-start'}>
+            <HStack spacing={10}>
+              <InputGroup colorScheme={colors.primary} size='lg'>
+                <InputLeftAddon bg={'#efefef'}>
+                  <Square minW="30px">
+                    <Image
+                      boxSize="20px"
+                      objectFit="cover"
+                      src="/meta_black.png"
+                      alt="stnear"
+                    />
+                  </Square>
+                </InputLeftAddon>
+                <Input
+                  autoFocus={true}
+                  id="amount_lock"
+                  name="amount_lock"
+                  type="number"
+                  bg={'#efefef'}
+                  colorScheme={colors.primary}
+                  value={formikLock.values.amount_lock || ""}
+                  onPaste={(e) => inputChange(e)}
+                  onBlur={(e) => inputChange(e, true)}
+                  onChange={(e) => inputChange(e)}
+                ></Input>
+                <InputRightAddon bg={'#efefef'}>
+                  <Button colorScheme={colors.primary} borderRadius={100} color={'white'} h='1.75rem' size='sm' onClick={() => maxButtonClicked()}>
+                    Max
+                  </Button>
+                </InputRightAddon>
+              </InputGroup>
+            </HStack>
+            {
+              formikLock.dirty && (
+                <Stack>
+                  <Text dangerouslySetInnerHTML={{ __html: (formikLock.errors && formikLock.errors.amount_lock) ? formikLock.errors.amount_lock as string : '' }} fontSize={'xs'} color={'red'}></Text>
+                </Stack>
+              )
+            }
+            <StackDivider></StackDivider >
+            <Stack spacing={5} w={'100%'} direction={{ base: 'column', md: 'column' }} justify={'space-between'}>
+              <HStack align={{ base: 'flex-start', md: 'flex-end' }} justify={'space-between'}>
+                <HStack>
+                  <Image boxSize="16px" alt={'lock-icon'} src={'./icons/check_bold.png'}></Image>
+                  <Text fontWeight={500} fontSize={'16px'}   > Voting Power</Text>
+
+                </HStack>
+                <Text fontWeight={700} fontFamily={'Meta Space'} fontSize={'16px'}  > {vPowerSim.toFixed(5)} </Text>
               </HStack>
-              {
-                formikLock.dirty && (
-                  <Stack>
-                    <Text dangerouslySetInnerHTML={{ __html: (formikLock.errors && formikLock.errors.amount_lock )? formikLock.errors.amount_lock as  string : ''}} fontSize={'xs'} color={'red'}></Text>
-                  </Stack>
-                )
-              }
-              <StackDivider></StackDivider >
-              <Stack spacing={5} w={'100%'} direction={{base:'column', md:'column'}} justify={'space-between'}>
-                <HStack align={{base:'flex-start', md:'flex-end'}} justify={'space-between'}>
+
+              <Slider defaultValue={sliderValue} min={MIN_LOCK_DAYS} max={MAX_LOCK_DAYS} step={15} onChange={(val) => setSliderValue(val)}>
+                <SliderTrack >
+                  <Box position='relative' right={10} />
+                  <SliderFilledTrack bg={colors.primary + '.500'} />
+                </SliderTrack>
+                <SliderThumb bg={colors.primary + '.500'} boxSize={6} />
+              </Slider>
+
+              <HStack align={{ base: 'flex-start', md: 'flex-Start' }} justify={'space-between'}>
+                <HStack >
+                  <Image boxSize="16px" alt={'lock-icon'} src={'./icons/lock_bold.png'}></Image>
                   <HStack>
-                    <Image boxSize="16px" alt={'lock-icon'} src={'./icons/check_bold.png'}></Image>
-                    <Text fontWeight={500} fontSize={'16px'}   > Voting Power</Text>
+                    <Text fontWeight={500} fontSize={'16px'} >AutoLock days </Text>
+                    <Text hidden={true} fontWeight={700} color={'green.500'}>( + {((getMultiplierPerDays(sliderValue) - 1) * 100).toFixed(2)} % )</Text>
 
                   </HStack>
-                  <Text fontWeight={700} fontFamily={'Meta Space'} fontSize={'16px'}  > { vPowerSim.toFixed(5)} </Text>
                 </HStack>
-
-                <Slider  defaultValue={sliderValue} min={MIN_LOCK_DAYS} max={MAX_LOCK_DAYS} step={15} onChange={(val) => setSliderValue(val)}>
-                  <SliderTrack >
-                    <Box position='relative' right={10} />
-                    <SliderFilledTrack  bg={colors.primary +'.500'} />
-                  </SliderTrack>
-                  <SliderThumb bg={colors.primary+'.500'} boxSize={6} />
-                </Slider>
-                
-                <HStack align={{base:'flex-start', md:'flex-Start'}} justify={'space-between'}>
-                  <HStack >
-                    <Image boxSize="16px" alt={'lock-icon'} src={'./icons/lock_bold.png'}></Image>
-                    <HStack>                    
-                      <Text fontWeight={500} fontSize={'16px'} >AutoLock days </Text> 
-                      <Text hidden={true} fontWeight={700} color={'green.500'}>( + {((getMultiplierPerDays(sliderValue) - 1)*100).toFixed(2)} % )</Text>
-
-                    </HStack>
-                  </HStack>
-                  <Text fontWeight={700} fontFamily={'Meta Space'} fontSize={'16px'} >{sliderValue} days</Text> 
-                </HStack>
-              </Stack>
-            </VStack>
-          </ModalBody>
-          <ModalFooter mt={10}>
-            <Flex  w={'100%'} direction={{base: 'column', md: 'row'}} justifyContent={'flex-end'}>
-              <Button borderRadius={100} variant='outline'  m={1} onClick={onClose}>
-                Cancel
-              </Button>
-              <Button borderRadius={100} colorScheme={colors.primary} px={70} onClick={(e: any) => formikLock.handleSubmit(e)}  m={1}>Lock</Button>
-            </Flex>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+                <Text fontWeight={700} fontFamily={'Meta Space'} fontSize={'16px'} >{sliderValue} days</Text>
+              </HStack>
+            </Stack>
+          </VStack>
+        </ModalBody>
+        <ModalFooter mt={10}>
+          <Flex w={'100%'} direction={{ base: 'column', md: 'row' }} justifyContent={'flex-end'}>
+            <Button borderRadius={100} variant='outline' m={1} onClick={onClose}>
+              Cancel
+            </Button>
+            <Button borderRadius={100} colorScheme={colors.primary} px={70} onClick={(e: any) => formikLock.handleSubmit(e)} m={1}>Lock</Button>
+          </Flex>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
   );
 };
 
