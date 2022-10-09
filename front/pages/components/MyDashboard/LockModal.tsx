@@ -32,7 +32,7 @@ import { useFormik } from 'formik';
 import lockValidation from '../../../validation/lockValidation';
 import { ntoy } from '../../../lib/util';
 import { useStore as useBalance } from "../../../stores/balance";
-import { MAX_LOCK_DAYS, MIN_LOCK_DAYS } from '../../../constants';
+import { MAX_LOCK_DAYS, MIN_LOCK_DAYS, STEP_LOCK_DAYS } from '../../../constants';
 
 type Props = {
   isOpen: any,
@@ -85,7 +85,9 @@ const LockModal = (props: Props) => {
     if (!days) {
       return 1;
     }
-    return 1 + (4 * (days - MIN_LOCK_DAYS) / (MAX_LOCK_DAYS - MIN_LOCK_DAYS));
+    // OLD formula: 1 + (4 * (days - MIN_LOCK_DAYS) / (MAX_LOCK_DAYS - MIN_LOCK_DAYS));
+    // NEW formula: days * 0.02
+    return days * 0.02
   }
 
   useEffect(() => {
@@ -176,7 +178,7 @@ const LockModal = (props: Props) => {
                 <Text fontWeight={700} fontFamily={'Meta Space'} fontSize={'16px'}  > {vPowerSim.toFixed(5)} </Text>
               </HStack>
 
-              <Slider defaultValue={sliderValue} min={MIN_LOCK_DAYS} max={MAX_LOCK_DAYS} step={15} onChange={(val) => setSliderValue(val)}>
+              <Slider defaultValue={sliderValue} min={MIN_LOCK_DAYS} max={MAX_LOCK_DAYS} step={STEP_LOCK_DAYS} onChange={(val) => setSliderValue(val)}>
                 <SliderTrack >
                   <Box position='relative' right={10} />
                   <SliderFilledTrack bg={colors.primary + '.500'} />

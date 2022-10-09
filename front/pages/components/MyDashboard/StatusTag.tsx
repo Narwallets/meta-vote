@@ -1,14 +1,14 @@
 import {
-  Box, 
-  Button, 
-  Text, 
+  Box,
+  Button,
+  Text,
   Modal,
   ModalOverlay,
   ModalContent,
   ModalHeader,
   ModalFooter,
   ModalBody,
-  ModalCloseButton, 
+  ModalCloseButton,
   InputGroup,
   InputLeftAddon,
   Input,
@@ -23,25 +23,25 @@ import {
   Square,
   Image
 } from '@chakra-ui/react';
-import React, {  useState } from 'react';
+import React, { useState } from 'react';
 import { colors } from '../../../constants/colors';
 import { lock } from '../../../lib/near';
 import { useFormik } from 'formik';
 import lockValidation from '../../../validation/lockValidation';
 import { ntoy } from '../../../lib/util';
-import { MAX_LOCK_DAYS, MIN_LOCK_DAYS } from '../../../constants';
+import { MAX_LOCK_DAYS, MIN_LOCK_DAYS, STEP_LOCK_DAYS } from '../../../constants';
 
 
 type Props = {
   wallet: any,
-  isOpen: any, 
+  isOpen: any,
   onClose: any,
   vPower: string
 }
 
 const StatusTag = (props: Props) => {
-  const {wallet, isOpen, onClose, vPower} = props;
-  const [ sliderValue, setSliderValue] = useState(MIN_LOCK_DAYS);
+  const { wallet, isOpen, onClose, vPower } = props;
+  const [sliderValue, setSliderValue] = useState(MIN_LOCK_DAYS);
 
   const initialValuesDeposit: any = {
     amount_lock: 0
@@ -62,73 +62,73 @@ const StatusTag = (props: Props) => {
       }
     },
   });
-  
-  const lockMetas = (values: any)=> {
+
+  const lockMetas = (values: any) => {
     try {
-      lock( sliderValue.toString(), ntoy(formikLock.values.amount_lock));
+      lock(sliderValue.toString(), ntoy(formikLock.values.amount_lock));
     }
     catch (error) {
       console.error(error);
-    } 
+    }
   }
 
   return (
-      <Modal isOpen={isOpen} onClose={onClose} isCentered>
-        <ModalOverlay />
-        <ModalContent bg={'purple.900'}>
-          <ModalHeader textAlign={'center'} color={'white'} fontWeight={500}>New Lock Position</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            <VStack spacing={4} align={'flex-start'}>
-              <Text fontWeight={400} color={'white'} fontSize={'sm'}>$META amount</Text>
-              <HStack spacing={10}>
-                  <InputGroup  colorScheme={colors.primary} size='lg'>
-                    <InputLeftAddon> 
-                          <Square minW="30px">
-                            <Image
-                              boxSize="20px"
-                              objectFit="cover"
-                              src="/meta.svg"
-                              alt="stnear"
-                            />
-                          </Square>
-                    </InputLeftAddon>
-                    <Input
-                        id="amount_lock"
-                        name="amount_lock"
-                        colorScheme={colors.primary} 
-                        value={formikLock.values.amount_lock}
-                        onPaste={formikLock.handleChange}
-                        onBlur={formikLock.handleBlur}
-                        onChange={formikLock.handleChange}
-                    ></Input>
-                    <InputRightAddon>
-                      <Button bg={'black'} color={'white'} h='1.75rem' size='sm'>
-                        Max
-                      </Button>
-                    </InputRightAddon>  
-                  </InputGroup>
-              </HStack>
-              
-              <StackDivider></StackDivider >
-              <Slider defaultValue={sliderValue} min={MIN_LOCK_DAYS} max={MAX_LOCK_DAYS} step={15} onChange={(val) => setSliderValue(val)}>
-                <SliderTrack bg={colors.primary + '.200'}>
-                  <Box position='relative' right={10} />
-                  <SliderFilledTrack bg={colors.primary +'.500'} />
-                </SliderTrack>
-                <SliderThumb bg={colors.primary+'.500'} boxSize={6} />
-              </Slider>
-              <HStack><Text fontWeight={200} fontSize={'xl'} color={'indigo.500'}>AutoLock days:</Text> <Text fontWeight={500} fontSize={'xl'} color={'white'}>{sliderValue}</Text> </HStack>
-            </VStack>
-          </ModalBody>
-          <ModalFooter>
-            <Button variant='ghost' mr={3} onClick={onClose}>
-              Cancel
-            </Button>
-            <Button colorScheme={colors.primary} onClick={(e: any) => formikLock.handleSubmit(e)}>Confirm</Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+    <Modal isOpen={isOpen} onClose={onClose} isCentered>
+      <ModalOverlay />
+      <ModalContent bg={'purple.900'}>
+        <ModalHeader textAlign={'center'} color={'white'} fontWeight={500}>New Lock Position</ModalHeader>
+        <ModalCloseButton />
+        <ModalBody>
+          <VStack spacing={4} align={'flex-start'}>
+            <Text fontWeight={400} color={'white'} fontSize={'sm'}>$META amount</Text>
+            <HStack spacing={10}>
+              <InputGroup colorScheme={colors.primary} size='lg'>
+                <InputLeftAddon>
+                  <Square minW="30px">
+                    <Image
+                      boxSize="20px"
+                      objectFit="cover"
+                      src="/meta.svg"
+                      alt="stnear"
+                    />
+                  </Square>
+                </InputLeftAddon>
+                <Input
+                  id="amount_lock"
+                  name="amount_lock"
+                  colorScheme={colors.primary}
+                  value={formikLock.values.amount_lock}
+                  onPaste={formikLock.handleChange}
+                  onBlur={formikLock.handleBlur}
+                  onChange={formikLock.handleChange}
+                ></Input>
+                <InputRightAddon>
+                  <Button bg={'black'} color={'white'} h='1.75rem' size='sm'>
+                    Max
+                  </Button>
+                </InputRightAddon>
+              </InputGroup>
+            </HStack>
+
+            <StackDivider></StackDivider >
+            <Slider defaultValue={sliderValue} min={MIN_LOCK_DAYS} max={MAX_LOCK_DAYS} step={STEP_LOCK_DAYS} onChange={(val) => setSliderValue(val)}>
+              <SliderTrack bg={colors.primary + '.200'}>
+                <Box position='relative' right={10} />
+                <SliderFilledTrack bg={colors.primary + '.500'} />
+              </SliderTrack>
+              <SliderThumb bg={colors.primary + '.500'} boxSize={6} />
+            </Slider>
+            <HStack><Text fontWeight={200} fontSize={'xl'} color={'indigo.500'}>AutoLock days:</Text> <Text fontWeight={500} fontSize={'xl'} color={'white'}>{sliderValue}</Text> </HStack>
+          </VStack>
+        </ModalBody>
+        <ModalFooter>
+          <Button variant='ghost' mr={3} onClick={onClose}>
+            Cancel
+          </Button>
+          <Button colorScheme={colors.primary} onClick={(e: any) => formikLock.handleSubmit(e)}>Confirm</Button>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
   );
 };
 
