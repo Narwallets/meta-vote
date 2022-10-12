@@ -21,7 +21,7 @@ import Script from "next/script";
 import {
   PageBlocker,
   PageBlockerState,
-} from "@meta-pool-apps/meta-shared-components";
+} from "../components";
 import { blockerStore } from "../stores/pageBlocker";
 
 const isProduction = process.env.NEXT_PUBLIC_VERCEL_ENV == 'production';

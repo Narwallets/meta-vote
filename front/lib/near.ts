@@ -60,6 +60,7 @@ export const signOutWallet = async (wallet: Wallet) => {
     .catch((err) => {
       console.log("Failed to sign out");
       console.error(err);
+      blockerStore.setState({isActive: false})
     }).finally(()=> {
       blockerStore.setState({isActive: false})
     });
