@@ -33,7 +33,7 @@ import { useWalletSelector } from "../../contexts/WalletSelectorContext";
 const Header: React.FC<ButtonProps> = (props) => {
   const { balance, setBalance } = useBalance();
   const isDesktop = useBreakpointValue({ base: false, md: true });
-  const { selector, modal, accounts, accountId } = useWalletSelector();
+  const { selector, modal, accounts } = useWalletSelector();
 
 
   const router = useRouter();
@@ -56,17 +56,16 @@ const Header: React.FC<ButtonProps> = (props) => {
   };
 
   const updateBalance = async () => {
-    if (selector.isSignedIn() && accountId) {
+    if (selector.isSignedIn()) {
       setBalance(await getMetaBalance());
     }
   }
 
   useEffect(() => {
     (async () => {
+      console.log("HEADER window.account_id ", window.account_id)
       try {
-        if (selector.isSignedIn() && accountId) {
-          window.account_id = accountId;
-          window.wallet = await selector.wallet();
+        if (selector.isSignedIn()) {
           setBalance(await getMetaBalance());
         }
       } catch (e) {
@@ -76,9 +75,11 @@ const Header: React.FC<ButtonProps> = (props) => {
 
     setInterval(async () => {
       try {
-        if (selector.isSignedIn() && accountId) {
-          window.account_id = accountId;
-          setBalance(await getMetaBalance());
+        console.log("HEADER setInterval window.account_id ", window.account_id, "selector.isSignedIn()", selector.isSignedIn())
+        if (selector.isSignedIn()) {
+          const bal = await getMetaBalance()
+          console.log("balance", bal)
+          setBalance(bal);
         }
       } catch (e) {
         console.error(e);
@@ -127,7 +128,7 @@ const Header: React.FC<ButtonProps> = (props) => {
                 }
                 {
                   isDesktop && selector?.isSignedIn() && (
-                    <Link href={`${nearConfig.explorerUrl}/accounts/${accountId}`} isExternal>
+                    <Link href={`${nearConfig.explorerUrl}/accounts/${window.account_id}`} isExternal>
                       <HStack
                         onClick={() => router.push(`/`)}
                         cursor="pointer"
@@ -136,7 +137,7 @@ const Header: React.FC<ButtonProps> = (props) => {
                         borderRadius={100}
                         backgroundColor={colors.primary + ".900"}
                       >
-                        <Text noOfLines={1} maxW={'20vw'} fontWeight={500} >{accountId} </Text>
+                        <Text noOfLines={1} maxW={'20vw'} fontWeight={500} >{window.account_id} </Text>
                         <ExternalLinkIcon ></ExternalLinkIcon>
                       </HStack>
                     </Link>
@@ -155,7 +156,7 @@ const Header: React.FC<ButtonProps> = (props) => {
                         <>
                           <MenuItem fontSize={'xl'}
                             as={"a"}
-                            href={`${nearConfig.explorerUrl}/accounts/${accountId}`}
+                            href={`${nearConfig.explorerUrl}/accounts/${window.account_id}`}
                             target="_blank"
                             rel="noreferrer"
                           >
