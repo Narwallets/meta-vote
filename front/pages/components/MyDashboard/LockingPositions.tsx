@@ -296,33 +296,16 @@ const LockingPosition = (props: Props) => {
               >
                 Add Voting Power
               </Button>
-              {GET_META_ENABLED ? (
-                <Button
-                  borderRadius={100}
-                  fontSize={{ base: "md", md: "md" }}
-                  variant={"outline"}
-                  colorScheme={colors.primary}
-                  onClick={() => router.push("/get-meta")}
-                >
-                  Get more $META
-                </Button>
-              ) : (
-                <Button
-                  borderRadius={100}
-                  rightIcon={<ExternalLinkIcon />}
-                  fontSize={{ base: "md", md: "md" }}
-                  variant={"outline"}
-                  colorScheme={colors.primary}
-                >
-                  <Link
-                    fontWeight={500}
-                    href={getNearConfig()?.refFinance}
-                    isExternal
-                  >
-                    Get more $META
-                  </Link>
-                </Button>
-              )}
+
+              <Button
+                borderRadius={100}
+                fontSize={{ base: "md", md: "md" }}
+                variant={"outline"}
+                colorScheme={colors.primary}
+                onClick={() => router.push("/get-meta")}
+              >
+                Get more $META
+              </Button>
             </HStack>
           </ButtonOnLogin>
         </Stack>

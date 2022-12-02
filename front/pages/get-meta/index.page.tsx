@@ -19,8 +19,7 @@ import React, { useEffect, useState } from "react";
 import { useQueryClient } from "react-query";
 import {
   GET_META_DEFAULT_SLIPPAGE,
-  GET_META_ENABLED,
-  GET_META_MIN_SLIPPAGE,
+   GET_META_MIN_SLIPPAGE,
   MODAL_DURATION,
 } from "../../constants";
 import { colors } from "../../constants/colors";
@@ -135,9 +134,6 @@ export default function GetMeta() {
   const onSetSlippage = () => {};
   const router = useRouter();
   if (isLoading) return <PageLoading />;
-  if (!GET_META_ENABLED) {
-    return (<FeatureComingSoon />)
-  }
   return (
     <>
       <SlippageSettingsModal

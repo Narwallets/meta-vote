@@ -28,7 +28,6 @@ import { formatToLocaleNear } from "../../lib/util";
 import { useStore as useVoter } from "../../stores/voter";
 import { useWalletSelector } from "../../contexts/WalletSelectorContext";
 import ButtonOnLogin from "./ButtonLogin";
-import { GET_META_ENABLED } from "../../constants";
 
 const Header: React.FC<ButtonProps> = (props) => {
   const { balance, setBalance } = useBalance();
@@ -104,25 +103,8 @@ const Header: React.FC<ButtonProps> = (props) => {
                   </Text>
                 </HStack>
 
-                {isDesktop && !GET_META_ENABLED && (
-                  <HStack
-                    cursor="pointer"
-                    alignItems="center"
-                    p={"5px 16px"}
-                    borderRadius={100}
-                    backgroundColor={colors.primary + ".900"}
-                  >
-                    <Link
-                      fontWeight={500}
-                      href={nearConfig.refFinance}
-                      isExternal
-                    >
-                      Get more $META
-                    </Link>
-                    <ExternalLinkIcon></ExternalLinkIcon>
-                  </HStack>
-                )}
-                {isDesktop && GET_META_ENABLED && (
+              
+                {isDesktop && (
                   <ButtonOnLogin>
                     <Button
                       borderRadius={100}
