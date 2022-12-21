@@ -5,7 +5,6 @@ import {
   Text,
   Stack,
   Button,
-  useColorModeValue,
   HStack,
   MenuList,
   MenuItem,
@@ -19,7 +18,7 @@ import React, { useEffect, useState } from "react";
 import { useQueryClient } from "react-query";
 import {
   GET_META_DEFAULT_SLIPPAGE,
-   GET_META_MIN_SLIPPAGE,
+  GET_META_MIN_SLIPPAGE,
   MODAL_DURATION,
 } from "../../constants";
 import { colors } from "../../constants/colors";
@@ -31,21 +30,23 @@ import {
   computeMetaAmountOnReturn,
   depositNear,
   depositToken,
+  getAccount,
+  METAPOOL_CONTRACT_ID,
 } from "../../lib/near";
 import { formatToLocaleNear, ntoy, yton } from "../../lib/util";
 import ButtonOnLogin from "../components/ButtonLogin";
-import FeatureComingSoon from "../components/coming-soon";
 import PageLoading from "../components/PageLoading";
 import DetailInfo from "./DetailInfo";
 import SlippageSettingsModal from "./SlippageSettingsModal";
 import TokenAmount from "./TokenAmount";
 import TokenIcon from "./TokenIcon";
 import TokenName from "./TokenIcon/TokenName";
-import { isDenominationACurrency, isNearDenomination } from "./TokenIcon/util";
+import { isNearDenomination } from "./TokenIcon/util";
+import { Metapool } from "@metapool/liquid-staking-sdk";
+import { useWalletSelector } from "../../contexts/WalletSelectorContext";
 
 export default function GetMeta() {
   const toast = useToast();
-  const queryClient = useQueryClient();
   const { data: tokens, isLoading } = useGetWhitelistedTokens();
   const { data: getMetaFee } = useGetMetaContractFee();
   const [tokenSelected, setTokenSelected] = useState<string | undefined>();
@@ -53,35 +54,17 @@ export default function GetMeta() {
   const [minAmountExpected, setMinAmountExpected] = useState<number>(0);
   const [metaOnReturn, setMetaOnReturn] = useState<number>(0);
   const [slippage, setSlippage] = useState<number>(GET_META_DEFAULT_SLIPPAGE);
-  const [amountError, setAmountError] = useState<string| undefined>(undefined);
+  const [amountError, setAmountError] = useState<string | undefined>(undefined);
+  const [metaPoolStake, setMetaPoolStake] = useState<Metapool>();
+  const { accountId} = useWalletSelector();
   const {
     isOpen: isOpenModal,
     onClose: onCloseModal,
     onOpen: onOpenModal,
   } = useDisclosure();
   const onChangeToken = (tokenContractId: string) => {
-    setTokenSelected(tokenContractId);   
+    setTokenSelected(tokenContractId);
   };
-
-  useEffect(() => {
-    const getMetaAmountToReceive = async () => {
-      const result = await computeMetaAmountOnReturn(
-        tokenSelected!,
-        ntoy(amount)
-      );
-      setMetaOnReturn(yton(result));
-      const _minAmountExpected = yton(result) - (yton(result) * slippage) / 100;
-      // min amount would be the meta amount on return - slippage
-      setMinAmountExpected(_minAmountExpected);
-    };
-
-    if (tokenSelected && amount > 0) {
-      getMetaAmountToReceive();
-    } else {
-      setMinAmountExpected(0);
-    }
-  }, [tokenSelected, amount, slippage]);
-  
   const onGetMetaClick = () => {
     if (tokenSelected && amount > 0) {
       console.log(`calling deposit ${tokenSelected} for ${ntoy(amount)}`);
@@ -131,6 +114,34 @@ export default function GetMeta() {
     }
   };
 
+  useEffect(() => {
+    const getMetaAmountToReceive = async () => {
+      const result = await computeMetaAmountOnReturn(
+        tokenSelected!,
+        ntoy(amount)
+      );
+      setMetaOnReturn(yton(result));
+      const _minAmountExpected = yton(result) - (yton(result) * slippage) / 100;
+      // min amount would be the meta amount on return - slippage
+      setMinAmountExpected(_minAmountExpected);
+    };
+
+    if (tokenSelected && amount > 0) {
+      getMetaAmountToReceive();
+    } else {
+      setMinAmountExpected(0);
+    }
+  }, [tokenSelected, amount, slippage]);
+
+  useEffect(() => {
+    (async () => {
+      const account = await getAccount(accountId!);
+      setMetaPoolStake(new Metapool(account, METAPOOL_CONTRACT_ID));
+    })();
+  }, [accountId])
+
+
+
   const onSetSlippage = () => {};
   const router = useRouter();
   if (isLoading) return <PageLoading />;
@@ -173,7 +184,12 @@ export default function GetMeta() {
             bg="rgba(0, 0, 0, 0.2)"
             borderRadius="8px"
           >
-            <HStack w="100%" spacing={5} justify="space-between" align="flex-end">
+            <HStack
+              w="100%"
+              spacing={5}
+              justify="space-between"
+              align="flex-end"
+            >
               <Menu placement="bottom-end">
                 <MenuButton
                   as={Button}
@@ -221,16 +237,12 @@ export default function GetMeta() {
             </HStack>
             {tokenSelected && amount > 0 ? (
               <VStack pt={5} spacing={"3"} w="100%">
-                <DetailInfo name={`Minimum received after slippage (${slippage}%)`}>
+                <DetailInfo
+                  name={`Minimum received after slippage (${slippage}%)`}
+                >
                   {`${formatToLocaleNear(minAmountExpected)} $META`}
                 </DetailInfo>
-                <DetailInfo
-             
-                  lineHeight={3}
-              
-                  letterSpacing="wide"
-                  name={"Rate"}
-                >
+                <DetailInfo lineHeight={3} letterSpacing="wide" name={"Rate"}>
                   <HStack>
                     <Text>1</Text>
                     <TokenName denomination={tokenSelected} />

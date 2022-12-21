@@ -22,7 +22,7 @@ export default function TokenIcon({ denomination, ...props }: TokenIconProps) {
         >
           {getCurrencyTokenCalt("NEAR")}
         </Text>
-        <Text color={"gray.900"}>{denomination}</Text>
+        <Text color={"gray.900"}>NEAR</Text>
       </HStack>
     );
   }

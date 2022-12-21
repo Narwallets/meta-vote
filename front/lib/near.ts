@@ -85,19 +85,24 @@ export const getConnection = async () => {
   return nearConnection;
 };
 
-export const getAccount = async () => {
-  const accountId = window.account_id;
-  const account = provider
-    .query<Account>({
-      request_type: "view_account",
-      finality: "final",
-      account_id: accountId,
-    })
-    .then((data) => ({
-      ...data,
-      account_id: accountId,
-    }));
-  return account;
+// export const getAccount = async () => {
+//   const accountId = window.account_id;
+//   const account = provider
+//     .query<Account>({
+//       request_type: "view_account",
+//       finality: "final",
+//       account_id: accountId,
+//     })
+//     .then((data) => ({
+//       ...data,
+//       account_id: accountId,
+//     }));
+//   return account;
+// };
+
+export const getAccount = async (accountId: string) => {
+  const connection = await getConnection();
+  return await connection.account(accountId);
 };
 
 export const getStNearPrice = async () => {
