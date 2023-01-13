@@ -18,7 +18,7 @@ import { useStore as useVoter } from "../../../stores/voter";
 import { yton } from '../../../lib/util';
 import LockModal from './LockModal';
 import InfoModal from './InfoModal';
-import { MODAL_TEXT } from '../../../constants';
+import { FETCH_VOTER_DATA_INTERVAL, MODAL_DURATION, MODAL_TEXT } from '../../../constants';
 import ButtonOnLogin from '../ButtonLogin';
 import DashboardCard from './DashboardCard';
 import { useWalletSelector } from '../../../contexts/WalletSelectorContext';
@@ -39,7 +39,7 @@ const DashboardHeader = () => {
   const padding = '24px';
   const waitingTime = 500;
 
-  const initMyData = async ()=> {
+  const getMyData = async ()=> {
     const newVoterData = voterData;
     newVoterData.votingPower = await getAvailableVotingPower();
     newVoterData.lockingPositions = await getAllLockingPositions();
@@ -51,12 +51,7 @@ const DashboardHeader = () => {
   }
 
   const withdrawClicked = async ()=> {
-       // withdrawAll(); 
        onOpenInfo();
-  }
-
-  const refresh = async () => {
-    initMyData();
   }
 
   const withdrawCall =  () => {
@@ -66,12 +61,12 @@ const DashboardHeader = () => {
         toast({
           title: "Transaction success.",
           status: "success",
-          duration: 9000,
+          duration: MODAL_DURATION.LONG,
           position: "top-right",
           isClosable: true,
         });
         setTimeout(() => {
-          initMyData();  
+          getMyData();  
         }, waitingTime);
         setProcessFlag(false);
       }).catch((error)=>
@@ -80,7 +75,7 @@ const DashboardHeader = () => {
           title: "Transaction error.",
           description: error,
           status: "error",
-          duration: 3000,
+          duration: MODAL_DURATION.ERROR,
           position: "top-right",
           isClosable: true,
         });
@@ -96,9 +91,12 @@ const DashboardHeader = () => {
   useEffect(  () =>{
     (async ()=> {
       if (selector && selector.isSignedIn()) {
-        initMyData()
+        getMyData()
       }
     })();
+    setInterval(()=>{
+      getMyData();
+    },FETCH_VOTER_DATA_INTERVAL)
   },[selector])
 
   return (
@@ -118,14 +116,14 @@ const DashboardHeader = () => {
           <Stack justify={'space-between'} wrap={{base: 'wrap'}} alignItems={'flex-start'} w={{ base: '100%'}}  spacing={10} p={padding} direction={'row'}>
             <HStack position={'relative'} spacing={2}>
               <VStack align={'flex-start'}>
-              <Text hidden={!isDesktop} opacity={1} color={"#F9F9FA"} fontSize={'20px'} p={'8px'}>My Voting Power</Text>
+              <Text hidden={!isDesktop} opacity={1} color={"#F9F9FA"} fontSize={'20px'} p={'8px'}>Available Voting Power</Text>
                 <HStack spacing={10}>
                   <Text fontSize={{base: '22px', md: '64px'}} fontWeight={700} fontFamily={'Meta Space'} >{yton(voterData.votingPower)}</Text>
                   <Tooltip placement='right' hidden={!isDesktop} label='Lock $META to get Voting Power'>
                     <Button leftIcon={<AddIcon />} hidden={!isDesktop} fontSize={{base: '16px'}} fontWeight={500} borderRadius={100} disabled={!selector?.isSignedIn()}px={5} onClick={onOpen}colorScheme={colors.primary}> Add Voting Power</Button>
                   </Tooltip>
                 </HStack>
-                <Text hidden={isDesktop}  fontSize={{md:'16px', base: '8px'}}  p={'8px'}>My Voting Power</Text>
+                <Text hidden={isDesktop}  fontSize={{md:'16px', base: '8px'}}  p={'8px'}>Available Voting Power</Text>
               </VStack>
             </HStack>
             <Stack top={3} position={'relative'} hidden={isDesktop}>

@@ -23,7 +23,8 @@ import {
   Square,
   Image,
   Flex,
-  Stack
+  Stack,
+  useToast
 } from '@chakra-ui/react';
 import React, {  useEffect, useState } from 'react';
 import { colors } from '../../../constants/colors';
@@ -32,6 +33,7 @@ import { useFormik } from 'formik';
 import lockValidation from '../../../validation/lockValidation';
 import { ntoy } from '../../../lib/util';
 import { useStore as useBalance } from "../../../stores/balance";
+import { DEFAULT_LOCK_DAYS, MAX_LOCK_DAYS, MIN_LOCK_DAYS, MODAL_DURATION } from '../../../constants';
 
 type Props = {
   isOpen: any, 
@@ -40,9 +42,10 @@ type Props = {
 
 const LockModal = (props: Props) => {
   const { isOpen, onClose} = props;
-  const [ sliderValue, setSliderValue] = useState(30);
+  const [ sliderValue, setSliderValue] = useState(DEFAULT_LOCK_DAYS);
   const [ vPowerSim, setVPowerSim] = useState(0);
   const { balance } = useBalance();
+  const toast = useToast();
 
   const initialValuesDeposit: any = {
     amount_lock: 0,
@@ -75,11 +78,16 @@ const LockModal = (props: Props) => {
     setVPowerSim(vPower);
   }
 
-  const calculateVPower = (days: any, amount: any)=> {
-    const minLockPeriod = 1;
-    const maxLockPeriod = 300;
-    const multiplier = 1 + (4 * (days - minLockPeriod) / (maxLockPeriod - minLockPeriod))
-    return amount * multiplier;
+  const calculateVPower = (days: any, amount: any) => {
+    const multiplier = getMultiplierPerDays(days);
+    return Number((amount * multiplier).toFixed(8));
+  }
+
+  const getMultiplierPerDays = (days: number) => {
+    if(!days) {
+      return 1;
+    }
+    return  1 + (4 * (days - MIN_LOCK_DAYS) / (MAX_LOCK_DAYS - MIN_LOCK_DAYS));
   }
 
   useEffect(() => {
@@ -103,12 +111,28 @@ const LockModal = (props: Props) => {
   }
   
   const lockMetas = (values: any)=> {
-    try {
-      lock( sliderValue.toString(), ntoy(formikLock.values.amount_lock));
-    }
-    catch (error) {
-      console.error(error);
-    } 
+      lock( sliderValue.toString(), ntoy(formikLock.values.amount_lock))
+        .then((val)=>{
+          toast({
+            title: "Lock success.",
+            status: "success",
+            duration: MODAL_DURATION.SUCCESS,
+            position: "top-right",
+            isClosable: true,
+          });
+          onClose();
+        })
+        .catch((error)=>
+          {
+            toast({
+              title: "Transaction error.",
+              description: error.message,
+              status: "error",
+              duration: MODAL_DURATION.ERROR,
+              position: "top-right",
+              isClosable: true,
+            });
+          });
   }
 
   return (
@@ -132,12 +156,13 @@ const LockModal = (props: Props) => {
                           </Square>
                     </InputLeftAddon>
                     <Input
+                        autoFocus={true}
                         id="amount_lock"
                         name="amount_lock"
                         type="number"
                         bg={'#efefef'}
                         colorScheme={colors.primary} 
-                        value={formikLock.values.amount_lock}
+                        value={formikLock.values.amount_lock||""}
                         onPaste={(e)=> inputChange(e)}
                         onBlur={(e)=> inputChange(e, true)}
                         onChange={(e)=> inputChange(e)}
@@ -162,11 +187,12 @@ const LockModal = (props: Props) => {
                   <HStack>
                     <Image boxSize="16px" alt={'lock-icon'} src={'./icons/check_bold.png'}></Image>
                     <Text fontWeight={500} fontSize={'16px'}   > Voting Power</Text>
+
                   </HStack>
-                  <Text fontWeight={700} fontFamily={'Meta Space'} fontSize={'16px'}  > { vPowerSim.toFixed(4)} </Text>
+                  <Text fontWeight={700} fontFamily={'Meta Space'} fontSize={'16px'}  > { vPowerSim.toFixed(5)} </Text>
                 </HStack>
 
-                <Slider defaultValue={30} min={30} max={300} step={1} onChange={(val) => setSliderValue(val)}>
+                <Slider  defaultValue={sliderValue} min={MIN_LOCK_DAYS} max={MAX_LOCK_DAYS} step={15} onChange={(val) => setSliderValue(val)}>
                   <SliderTrack >
                     <Box position='relative' right={10} />
                     <SliderFilledTrack  bg={colors.primary +'.500'} />
@@ -177,9 +203,13 @@ const LockModal = (props: Props) => {
                 <HStack align={{base:'flex-start', md:'flex-Start'}} justify={'space-between'}>
                   <HStack >
                     <Image boxSize="16px" alt={'lock-icon'} src={'./icons/lock_bold.png'}></Image>
-                    <Text fontWeight={500} fontSize={'16px'} >AutoLock days</Text> 
+                    <HStack>                    
+                      <Text fontWeight={500} fontSize={'16px'} >AutoLock days </Text> 
+                      <Text hidden={true} fontWeight={700} color={'green.500'}>( + {((getMultiplierPerDays(sliderValue) - 1)*100).toFixed(2)} % )</Text>
+
+                    </HStack>
                   </HStack>
-                  <Text fontWeight={700} fontFamily={'Meta Space'} fontSize={'16px'} >{sliderValue}</Text> 
+                  <Text fontWeight={700} fontFamily={'Meta Space'} fontSize={'16px'} >{sliderValue} days</Text> 
                 </HStack>
               </Stack>
             </VStack>
