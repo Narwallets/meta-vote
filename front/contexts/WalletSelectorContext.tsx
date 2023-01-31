@@ -4,6 +4,7 @@ import {
   NetworkId,
   setupWalletSelector,
   Wallet,
+  WalletModuleFactory,
 } from "@near-wallet-selector/core";
 import type { WalletSelector, AccountState } from "@near-wallet-selector/core";
 import { setupModal } from "@near-wallet-selector/modal-ui";
@@ -17,6 +18,8 @@ import { getConfig } from "../config";
 import { setupWalletConnect } from "@near-wallet-selector/wallet-connect";
 import { setupNearWallet } from "@near-wallet-selector/near-wallet";
 import { setupHereWallet } from "@near-wallet-selector/here-wallet";
+import { setupCoin98Wallet } from "@near-wallet-selector/coin98-wallet";
+import { setupMeteorWallet } from "@near-wallet-selector/meteor-wallet";
 declare global {
   interface Window {
     selector: WalletSelector;
@@ -48,6 +51,7 @@ export const WalletSelectorContextProvider: React.FC = ({ children }) => {
       network: NETWORK_ID as NetworkId,
       debug: true,
       modules: [
+        setupMeteorWallet() as WalletModuleFactory<Wallet>,
         setupNearWallet({
           walletUrl: nearConfig.walletUrl,
           iconUrl: "/assets/near-wallet-icon.png",
@@ -55,6 +59,7 @@ export const WalletSelectorContextProvider: React.FC = ({ children }) => {
         setupMyNearWallet(),
         setupMathWallet(),
         setupNightly(),
+        setupCoin98Wallet(),
         // setupLedger(),
         setupWalletConnect({
           projectId:
