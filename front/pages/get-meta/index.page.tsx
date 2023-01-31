@@ -42,7 +42,6 @@ import TokenAmount from "./TokenAmount";
 import TokenIcon from "./TokenIcon";
 import TokenName from "./TokenIcon/TokenName";
 import { isNearDenomination } from "./TokenIcon/util";
-import { Metapool } from "@metapool/liquid-staking-sdk";
 import { useWalletSelector } from "../../contexts/WalletSelectorContext";
 
 export default function GetMeta() {
@@ -55,7 +54,6 @@ export default function GetMeta() {
   const [metaOnReturn, setMetaOnReturn] = useState<number>(0);
   const [slippage, setSlippage] = useState<number>(GET_META_DEFAULT_SLIPPAGE);
   const [amountError, setAmountError] = useState<string | undefined>(undefined);
-  const [metaPoolStake, setMetaPoolStake] = useState<Metapool>();
   const { accountId} = useWalletSelector();
   const {
     isOpen: isOpenModal,
@@ -132,14 +130,6 @@ export default function GetMeta() {
       setMinAmountExpected(0);
     }
   }, [tokenSelected, amount, slippage]);
-
-  useEffect(() => {
-    (async () => {
-      const account = await getAccount(accountId!);
-      setMetaPoolStake(new Metapool(account, METAPOOL_CONTRACT_ID));
-    })();
-  }, [accountId])
-
 
 
   const onSetSlippage = () => {};
