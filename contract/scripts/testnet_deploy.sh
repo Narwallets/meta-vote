@@ -14,23 +14,24 @@ YOCTO_UNITS="000000000000000000000000"
 CONTRACT_ACC="meta-vote.near"
 CONTRACT_WASM="meta_vote_contract.wasm"
 
-OWNER_ID="meta-pool-dao.near"
+OWNER_ID="alan_test.testnet"
 MIN_LOCKING_PERIOD=30
 MAX_LOCKING_PERIOD=300
 MIN_DEPOSIT_AMOUNT="1"$YOCTO_UNITS
 MAX_LOCKING_POSITIONS=20
 MAX_VOTING_POSITIONS=40
-META_TOKEN_CONTRACT_ADDRESS="meta-token.near"
+META_TOKEN_CONTRACT_ADDRESS="token.meta.pool.testnet"
 
 
 # A) Deploying Contract with INIT
 INIT_ARGS='{"owner_id": "'$OWNER_ID'", "min_locking_period": '$MIN_LOCKING_PERIOD', "max_locking_period": '$MAX_LOCKING_PERIOD', "min_deposit_amount": "'$MIN_DEPOSIT_AMOUNT'", "max_locking_positions": '$MAX_LOCKING_POSITIONS', "max_voting_positions": '$MAX_VOTING_POSITIONS',"meta_token_contract_address": "'$META_TOKEN_CONTRACT_ADDRESS'"}'
-#echo Init Args: $INIT_ARGS
-#NEAR_ENV=mainnet near deploy --wasmFile ../res/$CONTRACT_WASM --accountId $CONTRACT_ACC --initFunction new --initArgs "$INIT_ARGS"
+echo Init Args: $INIT_ARGS
+near dev-deploy --wasmFile ../target/wasm32-unknown-unknown/release/$CONTRACT_WASM  --initFunction new --initArgs "$INIT_ARGS"
+near dev-deploy --wasmFile ../target/wasm32-unknown-unknown/release/meta_vote_contract.wasm  --accountId dev-1678754191868-11103308478746
 
 # B) Just re-deploy code
-NEAR_ENV=mainnet near deploy --wasmFile ../res/$CONTRACT_WASM --accountId $CONTRACT_ACC 
+#NEAR_ENV=mainnet near deploy --wasmFile ../res/$CONTRACT_WASM --accountId $CONTRACT_ACC 
 
-mkdir -p ../res/mainnet
-cp ../res/$CONTRACT_WASM ../res/mainnet/$CONTRACT_WASM.`date +%F.%T`.wasm
-date +%F.%T
+#mkdir -p ../res/mainnet
+#cp ../res/$CONTRACT_WASM ../res/mainnet/$CONTRACT_WASM.`date +%F.%T`.wasm
+#date +%F.%T

@@ -1,8 +1,17 @@
 use crate::*;
 use near_sdk::json_types::U128;
 use near_sdk::{env, log, near_bindgen, PromiseOrValue};
+use near_sdk::serde_json::{from_str};
+use near_sdk::serde::{Deserialize, Serialize};
 
 use near_contract_standards::fungible_token::receiver::FungibleTokenReceiver;
+/// This is format of output via JSON for the auction message.
+#[derive( Serialize, Deserialize)]
+#[serde(crate = "near_sdk::serde")]
+pub struct MsgInput {
+    pub lock_period: String,
+    pub receiver_id: Option<AccountId>,
+}
 
 #[near_bindgen]
 impl FungibleTokenReceiver for MetaVoteContract {
@@ -12,7 +21,8 @@ impl FungibleTokenReceiver for MetaVoteContract {
         amount: U128,
         msg: String,
     ) -> PromiseOrValue<U128> {
-        let locking_period = match msg.parse::<Days>() {
+        let msg_json: MsgInput = from_str(&msg).unwrap();
+        let locking_period = match msg_json.lock_period.parse::<Days>() {
             Ok(days) => days,
             Err(_) => panic!(
                 "Invalid locking period. Must be between {} and {} days",
@@ -21,8 +31,10 @@ impl FungibleTokenReceiver for MetaVoteContract {
             ),
         };
 
+        let assigned_id:AccountId = if msg_json.receiver_id.is_none() { sender_id } else {msg_json.receiver_id.ok_or(()).unwrap()} ;
+
         let amount = amount.0;
-        let voter_id = VoterId::from(sender_id);
+        let voter_id = VoterId::from(assigned_id);
         assert_eq!(
             env::predecessor_account_id(),
             self.meta_token_contract_address,
