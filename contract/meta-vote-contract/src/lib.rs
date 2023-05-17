@@ -555,6 +555,7 @@ impl MetaVoteContract {
     /*   View functions   */
     /**********************/
 
+    // get all information, voter + locking-positions + voting-positions
     pub fn get_voters(&self, from_index: u32, limit: u32) -> Vec<VoterJSON> {
         let keys = self.voters.keys_as_vector();
         let voters_len = keys.len() as u64;
@@ -600,6 +601,7 @@ impl MetaVoteContract {
         (self.min_locking_period, self.max_locking_period)
     }
 
+    // all locking positions for a voter
     pub fn get_all_locking_positions(
         &self,
         voter_id: VoterId
@@ -628,6 +630,7 @@ impl MetaVoteContract {
         }
     }
 
+    // votes by app and votable_object
     pub fn get_total_votes(
         &self,
         contract_address: ContractAddress,
@@ -642,6 +645,7 @@ impl MetaVoteContract {
         U128::from(votes)
     }
 
+    // votes by app
     pub fn get_votes_by_contract(
         &self,
         contract_address: ContractAddress
